@@ -3,6 +3,7 @@ import { useWindow } from '@/contexts/WindowContext';
 import DraggableWindow from '@/components/DraggableWindow';
 import AppLauncher from '@/components/AppLauncher';
 import StartMenu from '@/components/StartMenu';
+import ScrollingBanner from '@/components/ScrollingBanner';
 import { Button } from '@/components/ui/button';
 import { Grid3x3, Clock } from 'lucide-react';
 
@@ -27,6 +28,9 @@ export default function Desktop() {
 
   return (
     <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden flex flex-col">
+      {/* Scrolling Banner */}
+      <ScrollingBanner autoScroll={true} scrollInterval={5000} />
+
       {/* Main Desktop Area */}
       <div className="flex-1 relative">
         {/* App Launcher Background */}

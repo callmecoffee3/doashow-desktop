@@ -157,6 +157,19 @@
     animation: scroll 20s linear infinite;
   }
 
+  @keyframes scroll-banner {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .animate-scroll-banner {
+    animation: scroll-banner 30s linear infinite;
+  }
+
   /**
    * Custom container utility that centers content and adds responsive padding.
    *
