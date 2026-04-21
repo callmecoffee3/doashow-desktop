@@ -1,25 +1,53 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import Slideshow from '@/components/Slideshow';
 
 /**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
+ * Design Philosophy: Modern Minimalist Cinema
+ * - Full-screen immersive viewing with minimal UI chrome
+ * - Dark sophisticated aesthetic (charcoal/black backgrounds)
+ * - Auto-hiding controls that fade after 3 seconds of inactivity
+ * - Smooth cross-fade transitions (800ms)
+ * - Refined typography: Playfair Display (titles) + Inter (body)
+ * - Refined gold accent color (#d4af37 / oklch(0.85 0.15 39)) for interactive highlights
  */
+
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  // Sample images for demonstration
+  const sampleImages = [
+    {
+      id: '1',
+      url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop',
+      title: 'Mountain Vista',
+      description: 'Serene alpine landscape at sunset',
+    },
+    {
+      id: '2',
+      url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop&q=80',
+      title: 'Ocean Horizon',
+      description: 'Tranquil seascape with golden hour light',
+    },
+    {
+      id: '3',
+      url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop&q=60',
+      title: 'Forest Path',
+      description: 'Winding trail through ancient woodland',
+    },
+    {
+      id: '4',
+      url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop&q=40',
+      title: 'Desert Dunes',
+      description: 'Golden sands under starlit sky',
+    },
+    {
+      id: '5',
+      url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop&q=20',
+      title: 'Urban Lights',
+      description: 'City skyline illuminated at night',
+    },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="w-full h-screen">
+      <Slideshow images={sampleImages} autoPlayInterval={5000} />
     </div>
   );
 }
