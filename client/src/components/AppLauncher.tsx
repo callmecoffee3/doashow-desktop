@@ -9,6 +9,7 @@ import CalculatorApp from '@/components/CalculatorApp';
 import ScheduleApp from '@/components/ScheduleApp';
 import RecorderApp from '@/components/RecorderApp';
 import ChurchApp from '@/components/ChurchApp';
+import MessengerApp from '@/components/MessengerApp';
 
 interface App {
   id: string;
@@ -106,6 +107,13 @@ export default function AppLauncher() {
       description: 'Classes and Bible reading',
       component: <ChurchApp />,
     },
+    {
+      id: 'messenger',
+      name: 'Messenger',
+      icon: '💬',
+      description: 'Chat and messaging',
+      component: <MessengerApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -114,6 +122,7 @@ export default function AppLauncher() {
       schedule: 1200,
       recorder: 900,
       church: 1000,
+      messenger: 1200,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -121,6 +130,7 @@ export default function AppLauncher() {
       schedule: 700,
       recorder: 700,
       church: 700,
+      messenger: 700,
     };
 
     openWindow({
