@@ -8,6 +8,7 @@ import NotesApp from '@/components/NotesApp';
 import CalculatorApp from '@/components/CalculatorApp';
 import ScheduleApp from '@/components/ScheduleApp';
 import RecorderApp from '@/components/RecorderApp';
+import ChurchApp from '@/components/ChurchApp';
 
 interface App {
   id: string;
@@ -98,6 +99,13 @@ export default function AppLauncher() {
       description: 'Date and time display',
       component: <ClockWidget />,
     },
+    {
+      id: 'church',
+      name: 'Church',
+      icon: '⛪',
+      description: 'Classes and Bible reading',
+      component: <ChurchApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -105,12 +113,14 @@ export default function AppLauncher() {
       slideshow: 1024,
       schedule: 1200,
       recorder: 900,
+      church: 1000,
     };
 
     const heightMap: { [key: string]: number } = {
       slideshow: 768,
       schedule: 700,
       recorder: 700,
+      church: 700,
     };
 
     openWindow({
