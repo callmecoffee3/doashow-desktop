@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ChevronRight, Folder, File, Image, Music, FileText, Archive } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronRight, Folder, File, Image, Music, FileText, Archive, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FileItem {
@@ -90,6 +90,23 @@ function formatFileSize(bytes: number): string {
 export default function FileExplorer({ onFileSelect }: FileExplorerProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']));
   const [currentPath, setCurrentPath] = useState<string[]>(['My Computer']);
+  const [tickerIndex, setTickerIndex] = useState(0);
+
+  const tickerMessages = [
+    { type: 'info', text: '📁 Total files: 12 | Folders: 5' },
+    { type: 'success', text: '✓ System running smoothly' },
+    { type: 'info', text: '💾 Storage: 45GB available' },
+    { type: 'info', text: '🔒 All files secured' },
+    { type: 'success', text: '✓ Last backup: Today at 2:15 PM' },
+    { type: 'info', text: '📊 CPU Usage: 12% | Memory: 34%' },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickerIndex((prev) => (prev + 1) % tickerMessages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
@@ -147,8 +164,33 @@ export default function FileExplorer({ onFileSelect }: FileExplorerProps) {
     ));
   };
 
+  const currentMessage = tickerMessages[tickerIndex];
+
+  const getTickerIcon = (type: string) => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'alert':
+        return <AlertCircle className="w-4 h-4 text-orange-500" />;
+      default:
+        return <Info className="w-4 h-4 text-blue-500" />;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
+      {/* Scrolling Ticker */}
+      <div className="bg-gradient-to-r from-accent/20 to-accent/10 border-b border-accent/30 px-4 py-2 overflow-hidden">
+        <div className="flex items-center gap-3">
+          {getTickerIcon(currentMessage.type)}
+          <div className="flex-1 overflow-hidden">
+            <div className="text-sm font-medium text-foreground/80 whitespace-nowrap animate-pulse">
+              {currentMessage.text}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Address Bar */}
       <div className="border-b border-border px-4 py-2 bg-secondary">
         <div className="flex items-center gap-2 text-sm">

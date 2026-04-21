@@ -2,7 +2,8 @@ import { useWindow } from '@/contexts/WindowContext';
 import { Button } from '@/components/ui/button';
 import Slideshow from '@/components/Slideshow';
 import FileExplorer from '@/components/FileExplorer';
-import { Image, FolderOpen, Settings, Calculator, Clock } from 'lucide-react';
+import SettingsPanel from '@/components/SettingsPanel';
+import ClockWidget from '@/components/ClockWidget';
 
 interface App {
   id: string;
@@ -56,28 +57,14 @@ export default function AppLauncher() {
       name: 'Settings',
       icon: '⚙️',
       description: 'System preferences',
-      component: (
-        <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">Settings</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Theme</label>
-              <select className="w-full px-3 py-2 bg-input border border-border rounded">
-                <option>Dark</option>
-                <option>Light</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Language</label>
-              <select className="w-full px-3 py-2 bg-input border border-border rounded">
-                <option>English</option>
-                <option>Spanish</option>
-                <option>French</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      ),
+      component: <SettingsPanel />,
+    },
+    {
+      id: 'clock',
+      name: 'Clock',
+      icon: '🕐',
+      description: 'Date and time display',
+      component: <ClockWidget />,
     },
   ];
 

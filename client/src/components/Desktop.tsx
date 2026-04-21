@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useWindow } from '@/contexts/WindowContext';
 import DraggableWindow from '@/components/DraggableWindow';
 import AppLauncher from '@/components/AppLauncher';
+import StartMenu from '@/components/StartMenu';
 import { Button } from '@/components/ui/button';
 import { Grid3x3, Clock } from 'lucide-react';
 
 export default function Desktop() {
-  const { windows, openWindow, minimizeWindow, closeWindow } = useWindow();
+  const { windows, openWindow } = useWindow();
   const [showAppLauncher, setShowAppLauncher] = useState(true);
+  const [showStartMenu, setShowStartMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
@@ -17,7 +19,11 @@ export default function Desktop() {
   }, []);
 
   const visibleWindows = windows.filter(w => !w.isMinimized);
-  const minimizedWindows = windows.filter(w => w.isMinimized);
+
+  const handleLaunchApp = (appId: string) => {
+    setShowStartMenu(false);
+    setShowAppLauncher(true);
+  };
 
   return (
     <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden flex flex-col">
@@ -53,13 +59,21 @@ export default function Desktop() {
       </div>
 
       {/* Taskbar */}
-      <div className="bg-secondary border-t border-border px-4 py-2 flex items-center justify-between h-14 shadow-lg">
-        {/* Left: App Launcher Button */}
+      <div className="bg-secondary border-t border-border px-4 py-2 flex items-center justify-between h-14 shadow-lg relative">
+        {/* Start Menu */}
+        <StartMenu
+          isOpen={showStartMenu}
+          onClose={() => setShowStartMenu(false)}
+          onAppLaunch={handleLaunchApp}
+        />
+
+        {/* Left: Start Button */}
         <Button
-          onClick={() => setShowAppLauncher(!showAppLauncher)}
-          variant={showAppLauncher ? 'default' : 'ghost'}
+          onClick={() => setShowStartMenu(!showStartMenu)}
+          variant={showStartMenu ? 'default' : 'ghost'}
           size="icon"
-          className="rounded-lg"
+          className="rounded-lg bg-accent/20 hover:bg-accent/30"
+          title="Start Menu"
         >
           <Grid3x3 className="w-5 h-5" />
         </Button>
@@ -69,15 +83,6 @@ export default function Desktop() {
           {windows.map(window => (
             <Button
               key={window.id}
-              onClick={() => {
-                if (window.isMinimized) {
-                  // Restore window
-                  const windowEl = document.querySelector(`[data-window-id="${window.id}"]`);
-                  if (windowEl) {
-                    windowEl.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }
-              }}
               variant={window.isMinimized ? 'outline' : 'default'}
               size="sm"
               className="gap-2 max-w-xs truncate"
@@ -89,9 +94,11 @@ export default function Desktop() {
         </div>
 
         {/* Right: System Tray */}
-        <div className="flex items-center gap-3 text-sm text-foreground/70">
+        <div className="flex items-center gap-3 text-sm text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
           <Clock className="w-4 h-4" />
-          <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="font-mono">
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
         </div>
       </div>
     </div>
