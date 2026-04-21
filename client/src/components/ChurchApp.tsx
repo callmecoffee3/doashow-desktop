@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, BookOpen, Users, Clock, MapPin } from 'lucide-react';
+import { Plus, Trash2, BookOpen, Users, Clock, MapPin, Edit2, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ChurchClass {
@@ -68,31 +68,15 @@ const BIBLE_BOOKS: BibleBook[] = [
   { name: 'Revelation', chapters: 22, abbreviation: 'Rev' },
 ];
 
-const SAMPLE_VERSES: { [key: string]: string[] } = {
-  'John 3:16': [
-    'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
-  ],
-  'Psalm 23:1': [
-    'The Lord is my shepherd, I lack nothing.',
-  ],
-  'Proverbs 3:5-6': [
-    'Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.',
-  ],
-  'Matthew 11:28': [
-    'Come to me, all you who are weary and burdened, and I will give you rest.',
-  ],
-  'John 14:6': [
-    'Jesus answered, "I am the way and the truth and the life. No one comes to the Father except through me."',
-  ],
-  'Romans 3:23': [
-    'for all have sinned and fall short of the glory of God,',
-  ],
-  'Ephesians 2:8-9': [
-    'For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God— not by works, so that no one can boast.',
-  ],
-  'Philippians 4:13': [
-    'I can do all this through him who gives me strength.',
-  ],
+const DEFAULT_VERSES: { [key: string]: string } = {
+  'John 3:16': 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+  'Psalm 23:1': 'The Lord is my shepherd, I lack nothing.',
+  'Proverbs 3:5-6': 'Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.',
+  'Matthew 11:28': 'Come to me, all you who are weary and burdened, and I will give you rest.',
+  'John 14:6': 'Jesus answered, "I am the way and the truth and the life. No one comes to the Father except through me."',
+  'Romans 3:23': 'for all have sinned and fall short of the glory of God,',
+  'Ephesians 2:8-9': 'For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God— not by works, so that no one can boast.',
+  'Philippians 4:13': 'I can do all this through him who gives me strength.',
 };
 
 export default function ChurchApp() {
@@ -133,6 +117,9 @@ export default function ChurchApp() {
   const [selectedBook, setSelectedBook] = useState<string>('John');
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingVerse, setEditingVerse] = useState(false);
+  const [verseText, setVerseText] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     instructor: '',
@@ -142,7 +129,30 @@ export default function ChurchApp() {
     capacity: 30,
   });
 
+  // Load data from localStorage
+  useEffect(() => {
+    const savedClasses = localStorage.getItem('doashow_church_classes');
+    const savedVerses = localStorage.getItem('doashow_church_verses');
+    if (savedClasses) setClasses(JSON.parse(savedClasses));
+    if (savedVerses) {
+      Object.assign(DEFAULT_VERSES, JSON.parse(savedVerses));
+    }
+  }, []);
+
   const currentBook = BIBLE_BOOKS.find(b => b.name === selectedBook);
+  const verseKey = `${selectedBook} ${selectedChapter}:1`;
+  const currentVerseText = DEFAULT_VERSES[verseKey] || `This is a sample Bible reading for ${selectedBook} Chapter ${selectedChapter}. Click edit to add your own verse.`;
+
+  const saveClasses = (updatedClasses: ChurchClass[]) => {
+    setClasses(updatedClasses);
+    localStorage.setItem('doashow_church_classes', JSON.stringify(updatedClasses));
+  };
+
+  const saveVerses = () => {
+    DEFAULT_VERSES[verseKey] = verseText;
+    localStorage.setItem('doashow_church_verses', JSON.stringify(DEFAULT_VERSES));
+    setEditingVerse(false);
+  };
 
   const addClass = () => {
     if (!formData.name || !formData.instructor) return;
@@ -151,7 +161,8 @@ export default function ChurchApp() {
       ...formData,
       enrolled: 0,
     };
-    setClasses([...classes, newClass]);
+    const updated = [...classes, newClass];
+    saveClasses(updated);
     setFormData({
       name: '',
       instructor: '',
@@ -163,16 +174,39 @@ export default function ChurchApp() {
     setShowForm(false);
   };
 
+  const updateClass = (id: string, updates: Partial<ChurchClass>) => {
+    const updated = classes.map(c => c.id === id ? { ...c, ...updates } : c);
+    saveClasses(updated);
+    setEditingId(null);
+  };
+
   const deleteClass = (id: string) => {
-    setClasses(classes.filter(c => c.id !== id));
+    saveClasses(classes.filter(c => c.id !== id));
   };
 
   const enrollClass = (id: string) => {
-    setClasses(classes.map(c =>
+    const updated = classes.map(c =>
       c.id === id && c.enrolled < c.capacity
         ? { ...c, enrolled: c.enrolled + 1 }
         : c
-    ));
+    );
+    saveClasses(updated);
+  };
+
+  const startEdit = (churchClass: ChurchClass) => {
+    setEditingId(churchClass.id);
+    setFormData({
+      name: churchClass.name,
+      instructor: churchClass.instructor,
+      time: churchClass.time,
+      location: churchClass.location,
+      description: churchClass.description,
+      capacity: churchClass.capacity,
+    });
+  };
+
+  const saveEdit = (id: string) => {
+    updateClass(id, formData);
   };
 
   return (
@@ -217,10 +251,12 @@ export default function ChurchApp() {
             {/* Classes Header */}
             <div className="border-b border-border p-4 bg-secondary flex justify-between items-center">
               <h3 className="text-xl font-bold">Church Classes</h3>
-              <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Class
-              </Button>
+              {!showForm && editingId === null && (
+                <Button onClick={() => setShowForm(true)} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Class
+                </Button>
+              )}
             </div>
 
             {/* Add Class Form */}
@@ -282,43 +318,104 @@ export default function ChurchApp() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {classes.map(churchClass => (
                 <div key={churchClass.id} className="bg-card border border-border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-bold text-lg">{churchClass.name}</h4>
-                      <p className="text-sm text-foreground/70">{churchClass.instructor}</p>
+                  {editingId === churchClass.id ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm font-bold"
+                      />
+                      <input
+                        type="text"
+                        value={formData.instructor}
+                        onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={formData.time}
+                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                      />
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm h-16 resize-none"
+                      />
+                      <input
+                        type="number"
+                        value={formData.capacity}
+                        onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={() => saveEdit(churchClass.id)} size="sm" className="flex-1 gap-2">
+                          <Save className="w-4 h-4" />
+                          Save
+                        </Button>
+                        <Button onClick={() => setEditingId(null)} variant="outline" size="sm" className="flex-1">
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => deleteClass(churchClass.id)}
-                      variant="destructive"
-                      size="icon"
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="space-y-1 text-sm text-foreground/60 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      {churchClass.time}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      {churchClass.location}
-                    </div>
-                  </div>
-                  <p className="text-sm mb-3">{churchClass.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-foreground/60">
-                      Enrolled: {churchClass.enrolled}/{churchClass.capacity}
-                    </div>
-                    <Button
-                      onClick={() => enrollClass(churchClass.id)}
-                      disabled={churchClass.enrolled >= churchClass.capacity}
-                      size="sm"
-                    >
-                      Enroll
-                    </Button>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-lg">{churchClass.name}</h4>
+                          <p className="text-sm text-foreground/70">{churchClass.instructor}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => startEdit(churchClass)}
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => deleteClass(churchClass.id)}
+                            variant="destructive"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-sm text-foreground/60 mb-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {churchClass.time}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          {churchClass.location}
+                        </div>
+                      </div>
+                      <p className="text-sm mb-3">{churchClass.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-foreground/60">
+                          Enrolled: {churchClass.enrolled}/{churchClass.capacity}
+                        </div>
+                        <Button
+                          onClick={() => enrollClass(churchClass.id)}
+                          disabled={churchClass.enrolled >= churchClass.capacity}
+                          size="sm"
+                        >
+                          Enroll
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -371,16 +468,49 @@ export default function ChurchApp() {
               {/* Bible Content */}
               <div className="flex-1 overflow-y-auto p-6 bg-background">
                 <div className="max-w-2xl mx-auto">
-                  <h2 className="text-2xl font-bold mb-2">
-                    {selectedBook} {selectedChapter}
-                  </h2>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold">
+                      {selectedBook} {selectedChapter}
+                    </h2>
+                    <Button
+                      onClick={() => {
+                        setEditingVerse(true);
+                        setVerseText(currentVerseText);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  </div>
                   <div className="text-foreground/70 space-y-4">
-                    <div className="bg-card border border-border rounded-lg p-4">
-                      <p className="leading-relaxed text-lg">
-                        {SAMPLE_VERSES[`${selectedBook} ${selectedChapter}:1`]?.[0] ||
-                          `This is a sample Bible reading for ${selectedBook} Chapter ${selectedChapter}. In a full implementation, this would display the complete chapter text from the Bible.`}
-                      </p>
-                    </div>
+                    {editingVerse ? (
+                      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+                        <textarea
+                          value={verseText}
+                          onChange={(e) => setVerseText(e.target.value)}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-sm h-32 resize-none"
+                          placeholder="Enter Bible verse text..."
+                        />
+                        <div className="flex gap-2">
+                          <Button onClick={saveVerses} size="sm" className="flex-1 gap-2">
+                            <Save className="w-4 h-4" />
+                            Save Verse
+                          </Button>
+                          <Button onClick={() => setEditingVerse(false)} variant="outline" size="sm" className="flex-1">
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-card border border-border rounded-lg p-4">
+                        <p className="leading-relaxed text-lg">
+                          {currentVerseText}
+                        </p>
+                      </div>
+                    )}
                     <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 text-sm">
                       <p className="font-semibold mb-2">💡 Reflection</p>
                       <p>Take a moment to meditate on this passage. What does it mean to you today?</p>
