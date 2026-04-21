@@ -4,6 +4,10 @@ import Slideshow from '@/components/Slideshow';
 import FileExplorer from '@/components/FileExplorer';
 import SettingsPanel from '@/components/SettingsPanel';
 import ClockWidget from '@/components/ClockWidget';
+import NotesApp from '@/components/NotesApp';
+import CalculatorApp from '@/components/CalculatorApp';
+import ScheduleApp from '@/components/ScheduleApp';
+import RecorderApp from '@/components/RecorderApp';
 
 interface App {
   id: string;
@@ -53,6 +57,34 @@ export default function AppLauncher() {
       component: <FileExplorer />,
     },
     {
+      id: 'notes',
+      name: 'Notes',
+      icon: '📝',
+      description: 'Create and manage notes',
+      component: <NotesApp />,
+    },
+    {
+      id: 'calculator',
+      name: 'Calculator',
+      icon: '🧮',
+      description: 'Perform calculations',
+      component: <CalculatorApp />,
+    },
+    {
+      id: 'schedule',
+      name: 'Schedule',
+      icon: '📅',
+      description: 'Manage events and calendar',
+      component: <ScheduleApp />,
+    },
+    {
+      id: 'recorder',
+      name: 'Recorder',
+      icon: '🎙️',
+      description: 'Record audio messages',
+      component: <RecorderApp />,
+    },
+    {
       id: 'settings',
       name: 'Settings',
       icon: '⚙️',
@@ -69,18 +101,30 @@ export default function AppLauncher() {
   ];
 
   const handleLaunchApp = (app: App) => {
+    const widthMap: { [key: string]: number } = {
+      slideshow: 1024,
+      schedule: 1200,
+      recorder: 900,
+    };
+
+    const heightMap: { [key: string]: number } = {
+      slideshow: 768,
+      schedule: 700,
+      recorder: 700,
+    };
+
     openWindow({
       id: app.id,
       title: app.name,
       icon: app.icon,
       component: app.component,
-      width: app.id === 'slideshow' ? 1024 : 800,
-      height: app.id === 'slideshow' ? 768 : 600,
+      width: widthMap[app.id] || 800,
+      height: heightMap[app.id] || 600,
     });
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
       {apps.map(app => (
         <Button
           key={app.id}
@@ -90,7 +134,7 @@ export default function AppLauncher() {
         >
           <span className="text-4xl">{app.icon}</span>
           <div className="text-center">
-            <div className="font-semibold">{app.name}</div>
+            <div className="font-semibold text-sm">{app.name}</div>
             <div className="text-xs text-foreground/60">{app.description}</div>
           </div>
         </Button>
