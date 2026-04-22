@@ -17,6 +17,7 @@ import VideosApp from '@/components/VideosApp';
 import PhotoApp from '@/components/PhotoApp';
 import AppStore from '@/components/AppStore';
 import PodcastApp from '@/components/PodcastApp';
+import VideoAudioRecorder from '@/components/VideoAudioRecorder';
 import { useWindow } from '@/contexts/WindowContext';
 
 interface App {
@@ -173,6 +174,13 @@ export default function AppLauncher() {
       description: 'Create and manage podcasts',
       component: <PodcastApp />,
     },
+    {
+      id: 'videoaudiorecorder',
+      name: 'Media Recorder',
+      icon: '🎬',
+      description: 'Record video and audio',
+      component: <VideoAudioRecorder />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -188,6 +196,7 @@ export default function AppLauncher() {
       photos: 1400,
       appstore: 1600,
       podcast: 1200,
+      videoaudiorecorder: 1200,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -202,6 +211,7 @@ export default function AppLauncher() {
       photos: 800,
       appstore: 900,
       podcast: 800,
+      videoaudiorecorder: 900,
     };
 
     openWindow({
