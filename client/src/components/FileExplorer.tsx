@@ -210,33 +210,32 @@ function FileTreeItem({
   onUpload: (parentId: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(level < 2);
+  const [expanded, setExpanded] = useState(level === 0);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const hasChildren = item.children && item.children.length > 0;
   const isFolder = item.type === 'folder';
+  const canExpand = isFolder;
 
   return (
     <div>
       <div
-        className={`flex items-center gap-2 px-3 py-2 hover:bg-accent/10 rounded transition-colors ${
+        className={`flex items-center gap-2 px-3 py-2 hover:bg-accent/10 rounded transition-colors cursor-pointer ${
           item.orange ? 'bg-orange-500/10 border-l-2 border-orange-500' : ''
         }`}
         style={{ paddingLeft: `${12 + level * 16}px` }}
         onMouseEnter={() => setHoveredId(item.id)}
         onMouseLeave={() => setHoveredId(null)}
+        onClick={() => canExpand && setExpanded(!expanded)}
       >
-        {isFolder && hasChildren && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-0 hover:bg-accent/20 rounded"
-          >
-            <ChevronRight
-              className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
-            />
-          </button>
+        {canExpand && (
+          <ChevronRight
+            className={`w-4 h-4 transition-transform flex-shrink-0 ${
+              expanded ? 'rotate-90' : ''
+            }`}
+          />
         )}
-        {isFolder && !hasChildren && <div className="w-4" />}
+        {!canExpand && <div className="w-4 flex-shrink-0" />}
 
         {isFolder ? (
           <Folder className={`w-4 h-4 ${item.orange ? 'text-orange-500' : 'text-blue-400'}`} />
@@ -274,17 +273,26 @@ function FileTreeItem({
         )}
       </div>
 
-      {isFolder && expanded && item.children && item.children.length > 0 && (
+      {isFolder && expanded && item.children && (
         <div>
-          {item.children.map(child => (
-            <FileTreeItem
-              key={child.id}
-              item={child}
-              level={level + 1}
-              onUpload={onUpload}
-              onDelete={onDelete}
-            />
-          ))}
+          {item.children.length > 0 ? (
+            item.children.map(child => (
+              <FileTreeItem
+                key={child.id}
+                item={child}
+                level={level + 1}
+                onUpload={onUpload}
+                onDelete={onDelete}
+              />
+            ))
+          ) : (
+            <div
+              className="flex items-center gap-2 px-3 py-2 text-xs text-foreground/40 italic"
+              style={{ paddingLeft: `${12 + (level + 1) * 16}px` }}
+            >
+              Empty folder
+            </div>
+          )}
         </div>
       )}
     </div>
