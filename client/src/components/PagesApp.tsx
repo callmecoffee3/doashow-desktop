@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, X, Eye, FileText } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, Eye, FileText, Search, LogOut, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Page {
@@ -11,10 +11,11 @@ interface Page {
   createdDate: string;
   updatedDate: string;
   views: number;
+  owner: string;
 }
 
 export default function PagesApp() {
-  const [pages, setPages] = useState<Page[]>([
+  const [myPages, setMyPages] = useState<Page[]>([
     {
       id: '1',
       title: 'Welcome to DoaShow',
@@ -24,6 +25,7 @@ export default function PagesApp() {
       createdDate: '2024-01-01',
       updatedDate: '2024-01-15',
       views: 245,
+      owner: 'You',
     },
     {
       id: '2',
@@ -34,33 +36,63 @@ export default function PagesApp() {
       createdDate: '2024-01-02',
       updatedDate: '2024-01-14',
       views: 189,
+      owner: 'You',
     },
+  ]);
+
+  const [allPages, setAllPages] = useState<Page[]>([
     {
       id: '3',
       title: 'Advanced Features',
       slug: 'advanced-features',
       content: 'Explore the advanced features available in DoaShow.',
-      status: 'draft',
+      status: 'published',
       createdDate: '2024-01-10',
       updatedDate: '2024-01-20',
-      views: 0,
+      views: 156,
+      owner: 'John Doe',
+    },
+    {
+      id: '4',
+      title: 'Community Guidelines',
+      slug: 'community-guidelines',
+      content: 'Please follow these guidelines when using DoaShow.',
+      status: 'published',
+      createdDate: '2024-01-05',
+      updatedDate: '2024-01-18',
+      views: 342,
+      owner: 'Admin',
+    },
+    {
+      id: '5',
+      title: 'Tips and Tricks',
+      slug: 'tips-tricks',
+      content: 'Discover useful tips and tricks to get the most out of DoaShow.',
+      status: 'published',
+      createdDate: '2024-01-08',
+      updatedDate: '2024-01-19',
+      views: 298,
+      owner: 'Jane Smith',
     },
   ]);
 
   const [selectedPageId, setSelectedPageId] = useState<string>('1');
   const [showNewPageForm, setShowNewPageForm] = useState(false);
+  const [showPageDiscovery, setShowPageDiscovery] = useState(false);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
     content: '',
   });
 
-  const selectedPage = pages.find(p => p.id === selectedPageId);
+  const selectedPage = myPages.find(p => p.id === selectedPageId);
 
   useEffect(() => {
-    localStorage.setItem('doashow_pages', JSON.stringify(pages));
-  }, [pages]);
+    localStorage.setItem('doashow_my_pages', JSON.stringify(myPages));
+    localStorage.setItem('doashow_all_pages', JSON.stringify(allPages));
+  }, [myPages, allPages]);
 
   const createPage = () => {
     if (!newPageData.title.trim() || !newPageData.slug.trim()) return;
@@ -74,16 +106,45 @@ export default function PagesApp() {
       createdDate: new Date().toISOString().split('T')[0],
       updatedDate: new Date().toISOString().split('T')[0],
       views: 0,
+      owner: 'You',
     };
 
-    setPages([...pages, newPage]);
+    setMyPages([...myPages, newPage]);
     setSelectedPageId(newPage.id);
     setNewPageData({ title: '', slug: '', content: '' });
     setShowNewPageForm(false);
   };
 
+  const joinPage = (pageId: string) => {
+    const pageToJoin = allPages.find(p => p.id === pageId);
+    if (!pageToJoin) return;
+
+    const joinedPage: Page = {
+      ...pageToJoin,
+      views: pageToJoin.views + 1,
+    };
+
+    setMyPages([...myPages, joinedPage]);
+    setAllPages(allPages.filter(p => p.id !== pageId));
+    setSelectedPageId(joinedPage.id);
+    setShowPageDiscovery(false);
+  };
+
+  const leavePage = (id: string) => {
+    const updated = myPages.filter(p => p.id !== id);
+    setMyPages(updated);
+    if (selectedPageId === id) {
+      setSelectedPageId(updated[0]?.id || '');
+    }
+
+    const leftPage = myPages.find(p => p.id === id);
+    if (leftPage && leftPage.owner !== 'You') {
+      setAllPages([...allPages, leftPage]);
+    }
+  };
+
   const updatePage = (id: string, updates: Partial<Page>) => {
-    const updated = pages.map(p =>
+    const updated = myPages.map(p =>
       p.id === id
         ? {
             ...p,
@@ -92,13 +153,13 @@ export default function PagesApp() {
           }
         : p
     );
-    setPages(updated);
+    setMyPages(updated);
     setEditingPageId(null);
   };
 
   const deletePage = (id: string) => {
-    const updated = pages.filter(p => p.id !== id);
-    setPages(updated);
+    const updated = myPages.filter(p => p.id !== id);
+    setMyPages(updated);
     if (selectedPageId === id) {
       setSelectedPageId(updated[0]?.id || '');
     }
@@ -112,16 +173,27 @@ export default function PagesApp() {
     updatePage(id, { status: 'draft' });
   };
 
+  const filteredPages = allPages.filter(p =>
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex h-full">
       {/* Pages Sidebar */}
       <div className="w-72 border-r border-border bg-secondary flex flex-col">
         <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-bold mb-3">Pages</h2>
-          <Button onClick={() => setShowNewPageForm(true)} className="w-full gap-2">
-            <Plus className="w-4 h-4" />
-            New Page
-          </Button>
+          <h2 className="text-lg font-bold mb-3">My Pages</h2>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewPageForm(true)} className="flex-1 gap-2" size="sm">
+              <Plus className="w-4 h-4" />
+              New
+            </Button>
+            <Button onClick={() => setShowPageDiscovery(true)} variant="outline" className="flex-1 gap-2" size="sm">
+              <Search className="w-4 h-4" />
+              Browse
+            </Button>
+          </div>
         </div>
 
         {/* New Page Form */}
@@ -160,7 +232,7 @@ export default function PagesApp() {
 
         {/* Pages List */}
         <div className="flex-1 overflow-y-auto">
-          {pages.map(page => (
+          {myPages.map(page => (
             <button
               key={page.id}
               onClick={() => setSelectedPageId(page.id)}
@@ -188,22 +260,80 @@ export default function PagesApp() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deletePage(page.id);
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
+                {page.owner === 'You' ? (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePage(page.id);
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      leavePage(page.id);
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 hover:opacity-100 transition-opacity"
+                  >
+                    <LogOut className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
             </button>
           ))}
         </div>
       </div>
+
+      {/* Page Discovery Modal */}
+      {showPageDiscovery && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Discover Pages</h3>
+              <Button onClick={() => setShowPageDiscovery(false)} variant="ghost" size="icon">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Search pages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded text-sm mb-4"
+            />
+
+            <div className="space-y-2">
+              {filteredPages.length > 0 ? (
+                filteredPages.map(page => (
+                  <div key={page.id} className="p-3 bg-background border border-border rounded-lg flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{page.title}</h4>
+                      <p className="text-xs text-foreground/60 mt-1">{page.content.substring(0, 60)}...</p>
+                      <p className="text-xs text-foreground/50 mt-1">
+                        By {page.owner} • {page.views} views
+                      </p>
+                    </div>
+                    <Button onClick={() => joinPage(page.id)} className="gap-2">
+                      <UserPlus className="w-4 h-4" />
+                      Join
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-foreground/50 py-4">No pages found</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Page Editor */}
       <div className="flex-1 flex flex-col">
@@ -213,26 +343,30 @@ export default function PagesApp() {
             <div className="border-b border-border p-4 bg-card flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">{selectedPage.title}</h2>
-                <p className="text-sm text-foreground/60 mt-1">/{selectedPage.slug}</p>
+                <p className="text-sm text-foreground/60 mt-1">/{selectedPage.slug} • By {selectedPage.owner}</p>
               </div>
               <div className="flex gap-2">
-                {selectedPage.status === 'draft' ? (
-                  <Button onClick={() => publishPage(selectedPage.id)} className="gap-2">
-                    <Eye className="w-4 h-4" />
-                    Publish
-                  </Button>
-                ) : (
-                  <Button onClick={() => unpublishPage(selectedPage.id)} variant="outline" className="gap-2">
-                    <FileText className="w-4 h-4" />
-                    Unpublish
-                  </Button>
+                {selectedPage.owner === 'You' && (
+                  <>
+                    {selectedPage.status === 'draft' ? (
+                      <Button onClick={() => publishPage(selectedPage.id)} className="gap-2">
+                        <Eye className="w-4 h-4" />
+                        Publish
+                      </Button>
+                    ) : (
+                      <Button onClick={() => unpublishPage(selectedPage.id)} variant="outline" className="gap-2">
+                        <FileText className="w-4 h-4" />
+                        Unpublish
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
 
             {/* Page Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {editingPageId === selectedPage.id ? (
+              {editingPageId === selectedPage.id && selectedPage.owner === 'You' ? (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2">Title</label>
@@ -284,10 +418,12 @@ export default function PagesApp() {
                         Created: {selectedPage.createdDate} • Updated: {selectedPage.updatedDate}
                       </span>
                     </div>
-                    <Button onClick={() => setEditingPageId(selectedPage.id)} variant="outline" className="gap-2">
-                      <Edit2 className="w-4 h-4" />
-                      Edit
-                    </Button>
+                    {selectedPage.owner === 'You' && (
+                      <Button onClick={() => setEditingPageId(selectedPage.id)} variant="outline" className="gap-2">
+                        <Edit2 className="w-4 h-4" />
+                        Edit
+                      </Button>
+                    )}
                   </div>
 
                   <div className="bg-card border border-border rounded-lg p-6">
