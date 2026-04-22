@@ -1,4 +1,6 @@
+import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 import Desktop from '@/components/Desktop';
+import MobileLayout from '@/components/MobileLayout';
 
 /**
  * Design Philosophy: Modern Minimalist Cinema
@@ -14,12 +16,19 @@ import Desktop from '@/components/Desktop';
  * - App launcher with slideshow, file explorer, and settings
  * - Taskbar for quick access to open applications
  * - Window minimize, maximize, and close controls
+ * 
+ * Mobile Environment:
+ * - Touch-optimized interface with bottom navigation
+ * - Single app view with home button for quick navigation
+ * - Responsive layout that adapts to screen size
  */
 
 export default function Home() {
+  const device = useDeviceDetection();
+
   return (
     <div className="w-full h-screen">
-      <Desktop />
+      {device.isMobile ? <MobileLayout /> : <Desktop />}
     </div>
   );
 }
