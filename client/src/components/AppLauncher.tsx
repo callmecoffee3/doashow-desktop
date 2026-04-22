@@ -1,5 +1,6 @@
-import { useWindow } from '@/contexts/WindowContext';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Grid, List } from 'lucide-react';
 import Slideshow from '@/components/Slideshow';
 import FileExplorer from '@/components/FileExplorer';
 import SettingsPanel from '@/components/SettingsPanel';
@@ -15,6 +16,7 @@ import PagesApp from '@/components/PagesApp';
 import VideosApp from '@/components/VideosApp';
 import PhotoApp from '@/components/PhotoApp';
 import AppStore from '@/components/AppStore';
+import { useWindow } from '@/contexts/WindowContext';
 
 interface App {
   id: string;
@@ -26,6 +28,15 @@ interface App {
 
 export default function AppLauncher() {
   const { openWindow } = useWindow();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const saved = localStorage.getItem('doashow_app_view_mode');
+    return (saved as 'grid' | 'list') || 'grid';
+  });
+
+  const handleViewModeChange = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('doashow_app_view_mode', mode);
+  };
 
   const sampleImages = [
     {
@@ -194,21 +205,70 @@ export default function AppLauncher() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
-      {apps.map(app => (
-        <Button
-          key={app.id}
-          onClick={() => handleLaunchApp(app)}
-          variant="outline"
-          className="h-auto flex flex-col items-center justify-center gap-3 p-6 hover:bg-accent/10"
-        >
-          <span className="text-4xl">{app.icon}</span>
-          <div className="text-center">
-            <div className="font-semibold text-sm">{app.name}</div>
-            <div className="text-xs text-foreground/60">{app.description}</div>
+    <div className="flex flex-col h-full">
+      {/* Header with View Mode Toggle */}
+      <div className="border-b border-border p-4 bg-card flex items-center justify-between sticky top-0 z-10">
+        <h2 className="text-lg font-bold">📱 Applications</h2>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => handleViewModeChange('grid')}
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="icon"
+            title="Grid view"
+          >
+            <Grid className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={() => handleViewModeChange('list')}
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            title="List view"
+          >
+            <List className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Apps Container */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {viewMode === 'grid' ? (
+          // Grid View
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {apps.map(app => (
+              <Button
+                key={app.id}
+                onClick={() => handleLaunchApp(app)}
+                variant="outline"
+                className="h-auto flex flex-col items-center justify-center gap-3 p-6 hover:bg-accent/10 transition-colors"
+              >
+                <span className="text-5xl">{app.icon}</span>
+                <div className="text-center">
+                  <div className="font-semibold text-sm">{app.name}</div>
+                  <div className="text-xs text-foreground/60">{app.description}</div>
+                </div>
+              </Button>
+            ))}
           </div>
-        </Button>
-      ))}
+        ) : (
+          // List View
+          <div className="space-y-2 max-w-3xl">
+            {apps.map(app => (
+              <Button
+                key={app.id}
+                onClick={() => handleLaunchApp(app)}
+                variant="outline"
+                className="w-full flex items-center justify-start gap-4 p-4 h-auto hover:bg-accent/10 transition-colors"
+              >
+                <span className="text-3xl flex-shrink-0">{app.icon}</span>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="font-semibold text-sm">{app.name}</div>
+                  <div className="text-xs text-foreground/60 truncate">{app.description}</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
