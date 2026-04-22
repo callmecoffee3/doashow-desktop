@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Grid, List } from 'lucide-react';
+import { Grid, List, Search, X } from 'lucide-react';
 import Slideshow from '@/components/Slideshow';
 import FileExplorer from '@/components/FileExplorer';
 import SettingsPanel from '@/components/SettingsPanel';
@@ -42,6 +42,8 @@ export default function AppLauncher() {
     const saved = localStorage.getItem('doashow_app_view_mode');
     return (saved as 'grid' | 'list') || 'grid';
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPreview, setSelectedPreview] = useState<App | null>(null);
 
   const handleViewModeChange = (mode: 'grid' | 'list') => {
     setViewMode(mode);
@@ -230,8 +232,13 @@ export default function AppLauncher() {
       icon: '🌐',
       description: 'Marketing & promotion sites',
       component: <WebsitesApp />,
-    },
+    }
   ];
+
+  const filteredApps = apps.filter(app =>
+    app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    app.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleLaunchApp = (app: App) => {
     const widthMap: { [key: string]: number } = {
@@ -288,10 +295,11 @@ export default function AppLauncher() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with View Mode Toggle */}
-      <div className="border-b border-border p-4 bg-card flex items-center justify-between sticky top-0 z-10">
-        <h2 className="text-lg font-bold">📱 Applications</h2>
-        <div className="flex gap-2">
+      {/* Header with Search and View Mode Toggle */}
+      <div className="border-b border-border p-4 bg-card space-y-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">📱 Applications</h2>
+          <div className="flex gap-2">
           <Button
             onClick={() => handleViewModeChange('grid')}
             variant={viewMode === 'grid' ? 'default' : 'outline'}
@@ -308,18 +316,50 @@ export default function AppLauncher() {
           >
             <List className="w-4 h-4" />
           </Button>
+          </div>
+        </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+          <input
+            type="text"
+            placeholder="Search apps..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Apps Container */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {viewMode === 'grid' ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {apps.map(app => (
+      {/* Main Content - Apps and Preview */}
+      <div className="flex-1 overflow-hidden flex">
+        {/* Apps Container */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {filteredApps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-foreground/50">
+              <Search className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg">No apps found</p>
+              <p className="text-sm">Try a different search term</p>
+            </div>
+          ) : viewMode === 'grid' ? (
+            // Grid View
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filteredApps.map(app => (
               <div key={app.id} className="relative group">
                 <Button
-                  onClick={() => handleLaunchApp(app)}
+                  onClick={() => {
+                    handleLaunchApp(app);
+                    setSelectedPreview(null);
+                  }}
+                  onMouseEnter={() => setSelectedPreview(app)}
                   variant="outline"
                   className="h-auto w-full flex flex-col items-center justify-center gap-3 p-6 hover:bg-accent/10 transition-colors"
                 >
@@ -339,15 +379,19 @@ export default function AppLauncher() {
                   📌
                 </Button>
               </div>
-            ))}
-          </div>
-        ) : (
-          // List View
-          <div className="space-y-2 max-w-3xl">
-            {apps.map(app => (
+            ))}  
+            </div>
+          ) : (
+            // List View
+            <div className="space-y-2 max-w-3xl">
+              {filteredApps.map(app => (
               <Button
                 key={app.id}
-                onClick={() => handleLaunchApp(app)}
+                onClick={() => {
+                  handleLaunchApp(app);
+                  setSelectedPreview(null);
+                }}
+                onMouseEnter={() => setSelectedPreview(app)}
                 variant="outline"
                 className="w-full flex items-center justify-start gap-4 p-4 h-auto hover:bg-accent/10 transition-colors"
               >
@@ -357,7 +401,35 @@ export default function AppLauncher() {
                   <div className="text-xs text-foreground/60 truncate">{app.description}</div>
                 </div>
               </Button>
-            ))}
+              ))}  
+            </div>
+          )}
+        </div>
+
+        {/* Preview Panel */}
+        {selectedPreview && (
+          <div className="w-80 border-l border-border bg-card p-6 overflow-y-auto flex flex-col gap-4">
+            <div>
+              <div className="text-6xl mb-4">{selectedPreview.icon}</div>
+              <h3 className="text-xl font-bold mb-1">{selectedPreview.name}</h3>
+              <p className="text-sm text-foreground/70">{selectedPreview.description}</p>
+            </div>
+            <Button
+              onClick={() => {
+                handleLaunchApp(selectedPreview);
+                setSelectedPreview(null);
+              }}
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              Launch App
+            </Button>
+            <Button
+              onClick={() => addShortcut(selectedPreview.id, selectedPreview.name, selectedPreview.icon)}
+              variant="outline"
+              className="w-full"
+            >
+              📌 Pin to Desktop
+            </Button>
           </div>
         )}
       </div>
