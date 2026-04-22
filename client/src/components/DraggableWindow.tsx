@@ -1,5 +1,5 @@
 import { useState, useRef, ReactNode } from 'react';
-import { X, Minus, Square } from 'lucide-react';
+import { X, Minus, Square, ChevronLeft, ChevronRight, RotateCcw, Search, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWindow } from '@/contexts/WindowContext';
 
@@ -13,6 +13,7 @@ interface DraggableWindowProps {
   x?: number;
   y?: number;
   isMaximized?: boolean;
+  showBrowserBar?: boolean;
 }
 
 export default function DraggableWindow({
@@ -25,12 +26,21 @@ export default function DraggableWindow({
   x = 100,
   y = 100,
   isMaximized = false,
+  showBrowserBar = true,
 }: DraggableWindowProps) {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, updateWindow } = useWindow();
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x, y });
   const [size, setSize] = useState({ width, height });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [addressBar, setAddressBar] = useState('app://localhost');
+  const [bookmarks, setBookmarks] = useState([
+    { id: '1', name: 'Home', url: 'app://home', icon: '🏠' },
+    { id: '2', name: 'Settings', url: 'app://settings', icon: '⚙️' },
+    { id: '3', name: 'Help', url: 'app://help', icon: '❓' },
+  ]);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -122,6 +132,72 @@ export default function DraggableWindow({
           </div>
         </div>
 
+        {/* Browser Toolbar */}
+        {showBrowserBar && (
+          <>
+            {/* Navigation & Address Bar */}
+            <div className="px-3 py-2 border-b border-border bg-secondary/50 space-y-2 flex-shrink-0" data-no-drag>
+              {/* Navigation Buttons & Address Bar */}
+              <div className="flex items-center gap-2">
+                <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </Button>
+                <div className="flex-1 flex items-center gap-1 bg-background border border-border rounded px-2 py-1">
+                  <span className="text-xs text-foreground/50">📍</span>
+                  <input
+                    type="text"
+                    value={addressBar}
+                    onChange={(e) => setAddressBar(e.target.value)}
+                    className="flex-1 bg-transparent text-xs focus:outline-none"
+                    placeholder="Address bar"
+                  />
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => setIsBookmarked(!isBookmarked)}
+                >
+                  <Star className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                </Button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex items-center gap-2 bg-background border border-border rounded px-2 py-1">
+                <Search className="w-3.5 h-3.5 text-foreground/50 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-xs focus:outline-none placeholder-foreground/40"
+                  placeholder="Search within app..."
+                />
+              </div>
+            </div>
+
+            {/* Bookmark Bar */}
+            <div className="px-2 py-1 border-b border-border bg-secondary/30 flex items-center gap-1 overflow-x-auto flex-shrink-0" data-no-drag>
+              {bookmarks.map(bookmark => (
+                <Button
+                  key={bookmark.id}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="mr-1">{bookmark.icon}</span>
+                  {bookmark.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Content */}
         <div className="flex-1 overflow-auto bg-background">
           {children}
@@ -181,6 +257,72 @@ export default function DraggableWindow({
           </Button>
         </div>
       </div>
+
+      {/* Browser Toolbar */}
+      {showBrowserBar && (
+        <>
+          {/* Navigation & Address Bar */}
+          <div className="px-3 py-2 border-b border-border bg-secondary/50 space-y-2 flex-shrink-0" data-no-drag>
+            {/* Navigation Buttons & Address Bar */}
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" className="h-7 w-7">
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-7 w-7">
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-7 w-7">
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+              <div className="flex-1 flex items-center gap-1 bg-background border border-border rounded px-2 py-1">
+                <span className="text-xs text-foreground/50">📍</span>
+                <input
+                  type="text"
+                  value={addressBar}
+                  onChange={(e) => setAddressBar(e.target.value)}
+                  className="flex-1 bg-transparent text-xs focus:outline-none"
+                  placeholder="Address bar"
+                />
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={() => setIsBookmarked(!isBookmarked)}
+              >
+                <Star className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+              </Button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="flex items-center gap-2 bg-background border border-border rounded px-2 py-1">
+              <Search className="w-3.5 h-3.5 text-foreground/50 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-xs focus:outline-none placeholder-foreground/40"
+                placeholder="Search within app..."
+              />
+            </div>
+          </div>
+
+          {/* Bookmark Bar */}
+          <div className="px-2 py-1 border-b border-border bg-secondary/30 flex items-center gap-1 overflow-x-auto flex-shrink-0" data-no-drag>
+            {bookmarks.map(bookmark => (
+              <Button
+                key={bookmark.id}
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs whitespace-nowrap flex-shrink-0"
+              >
+                <span className="mr-1">{bookmark.icon}</span>
+                {bookmark.name}
+              </Button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-auto bg-background">
