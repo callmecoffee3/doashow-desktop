@@ -10,6 +10,9 @@ import ScheduleApp from '@/components/ScheduleApp';
 import RecorderApp from '@/components/RecorderApp';
 import ChurchApp from '@/components/ChurchApp';
 import MessengerApp from '@/components/MessengerApp';
+import GroupsApp from '@/components/GroupsApp';
+import PagesApp from '@/components/PagesApp';
+import VideosApp from '@/components/VideosApp';
 
 interface App {
   id: string;
@@ -114,6 +117,27 @@ export default function AppLauncher() {
       description: 'Chat and messaging',
       component: <MessengerApp />,
     },
+    {
+      id: 'groups',
+      name: 'Groups',
+      icon: '👥',
+      description: 'Community and groups',
+      component: <GroupsApp />,
+    },
+    {
+      id: 'pages',
+      name: 'Pages',
+      icon: '📄',
+      description: 'Content creation',
+      component: <PagesApp />,
+    },
+    {
+      id: 'videos',
+      name: 'Videos',
+      icon: '🎬',
+      description: 'Video playback',
+      component: <VideosApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -123,6 +147,9 @@ export default function AppLauncher() {
       recorder: 900,
       church: 1000,
       messenger: 1200,
+      groups: 1200,
+      pages: 1200,
+      videos: 1400,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -131,6 +158,9 @@ export default function AppLauncher() {
       recorder: 700,
       church: 700,
       messenger: 700,
+      groups: 700,
+      pages: 700,
+      videos: 800,
     };
 
     openWindow({
