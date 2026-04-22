@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Play, Pause, Volume2, VolumeX, Maximize, Download, Heart, Upload, X, Edit2, Save, Users, Settings } from 'lucide-react';
+import { Plus, Trash2, Play, Pause, Volume2, VolumeX, Maximize, Download, Heart, Upload, X, Edit2, Save, Users, Settings, ChevronDown, ChevronRight, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Video {
@@ -15,6 +15,15 @@ interface Video {
   liked: boolean;
   uploader: string;
   channelId: string;
+  subChannelId?: string;
+}
+
+interface SubChannel {
+  id: string;
+  name: string;
+  description: string;
+  createdDate: string;
+  videoCount: number;
 }
 
 interface Channel {
@@ -25,6 +34,7 @@ interface Channel {
   createdDate: string;
   owner: string;
   banner: string;
+  subChannels: SubChannel[];
 }
 
 export default function VideosApp() {
@@ -37,6 +47,22 @@ export default function VideosApp() {
       createdDate: '2024-01-01',
       owner: 'You',
       banner: '🎬',
+      subChannels: [
+        {
+          id: 'sub1',
+          name: 'Tutorials',
+          description: 'Step-by-step tutorials',
+          createdDate: '2024-01-05',
+          videoCount: 2,
+        },
+        {
+          id: 'sub2',
+          name: 'Reviews',
+          description: 'Product and service reviews',
+          createdDate: '2024-01-10',
+          videoCount: 0,
+        },
+      ],
     },
   ]);
 
@@ -49,15 +75,15 @@ export default function VideosApp() {
       createdDate: '2024-01-05',
       owner: 'John Doe',
       banner: '💻',
-    },
-    {
-      id: '3',
-      name: 'Creative Content',
-      description: 'Art, design, and creative tutorials',
-      subscribers: 3180,
-      createdDate: '2024-01-10',
-      owner: 'Jane Smith',
-      banner: '🎨',
+      subChannels: [
+        {
+          id: 'sub3',
+          name: 'Software',
+          description: 'Software tips and tricks',
+          createdDate: '2024-01-06',
+          videoCount: 1,
+        },
+      ],
     },
   ]);
 
@@ -75,6 +101,7 @@ export default function VideosApp() {
       liked: false,
       uploader: 'You',
       channelId: '1',
+      subChannelId: 'sub1',
     },
     {
       id: '2',
@@ -89,6 +116,7 @@ export default function VideosApp() {
       liked: false,
       uploader: 'You',
       channelId: '1',
+      subChannelId: 'sub1',
     },
   ]);
 
@@ -106,32 +134,21 @@ export default function VideosApp() {
       liked: false,
       uploader: 'John Doe',
       channelId: '2',
-    },
-    {
-      id: '4',
-      title: 'Community Highlights',
-      description: 'Best moments from our community',
-      duration: '8:15',
-      uploadedDate: '2024-01-12',
-      views: 721,
-      likes: 156,
-      thumbnail: '🎞️',
-      url: 'https://example.com/video4.mp4',
-      liked: false,
-      uploader: 'John Doe',
-      channelId: '2',
+      subChannelId: 'sub3',
     },
   ]);
 
   const [selectedVideoId, setSelectedVideoId] = useState<string>('1');
   const [selectedChannelId, setSelectedChannelId] = useState<string>('1');
-  const [viewMode, setViewMode] = useState<'videos' | 'channels' | string>('videos');
+  const [selectedSubChannelId, setSelectedSubChannelId] = useState<string | null>('sub1');
+  const [viewMode, setViewMode] = useState<string>('videos');
+  const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set(['1']));
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(100);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [showChannelForm, setShowChannelForm] = useState(false);
-  const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
+  const [showSubChannelForm, setShowSubChannelForm] = useState(false);
   const [newVideoData, setNewVideoData] = useState({
     title: '',
     description: '',
@@ -141,12 +158,21 @@ export default function VideosApp() {
     name: '',
     description: '',
   });
+  const [newSubChannelData, setNewSubChannelData] = useState({
+    name: '',
+    description: '',
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedVideo = myVideos.find(v => v.id === selectedVideoId) || allVideos.find(v => v.id === selectedVideoId);
   const selectedChannel = myChannels.find(c => c.id === selectedChannelId) || allChannels.find(c => c.id === selectedChannelId);
-  const channelVideos = [...myVideos, ...allVideos].filter(v => v.channelId === selectedChannelId);
+  const selectedSubChannel = selectedChannel?.subChannels.find(sc => sc.id === selectedSubChannelId);
+  
+  const channelVideos = [...myVideos, ...allVideos].filter(v => 
+    v.channelId === selectedChannelId && 
+    (selectedSubChannelId ? v.subChannelId === selectedSubChannelId : !v.subChannelId)
+  );
 
   useEffect(() => {
     localStorage.setItem('doashow_my_videos', JSON.stringify(myVideos));
@@ -154,6 +180,16 @@ export default function VideosApp() {
     localStorage.setItem('doashow_my_channels', JSON.stringify(myChannels));
     localStorage.setItem('doashow_all_channels', JSON.stringify(allChannels));
   }, [myVideos, allVideos, myChannels, allChannels]);
+
+  const toggleChannelExpand = (channelId: string) => {
+    const newExpanded = new Set(expandedChannels);
+    if (newExpanded.has(channelId)) {
+      newExpanded.delete(channelId);
+    } else {
+      newExpanded.add(channelId);
+    }
+    setExpandedChannels(newExpanded);
+  };
 
   const createChannel = () => {
     if (!newChannelData.name.trim()) return;
@@ -166,18 +202,43 @@ export default function VideosApp() {
       createdDate: new Date().toISOString().split('T')[0],
       owner: 'You',
       banner: '🎬',
+      subChannels: [],
     };
 
     setMyChannels([...myChannels, newChannel]);
     setSelectedChannelId(newChannel.id);
+    setSelectedSubChannelId(null);
     setNewChannelData({ name: '', description: '' });
     setShowChannelForm(false);
   };
 
-  const updateChannel = (id: string, updates: Partial<Channel>) => {
-    const updated = myChannels.map(c => (c.id === id ? { ...c, ...updates } : c));
+  const createSubChannel = () => {
+    if (!newSubChannelData.name.trim() || !selectedChannelId) return;
+
+    const updated = myChannels.map(c => {
+      if (c.id === selectedChannelId) {
+        const newSubChannel: SubChannel = {
+          id: Date.now().toString(),
+          name: newSubChannelData.name,
+          description: newSubChannelData.description,
+          createdDate: new Date().toISOString().split('T')[0],
+          videoCount: 0,
+        };
+        return {
+          ...c,
+          subChannels: [...c.subChannels, newSubChannel],
+        };
+      }
+      return c;
+    });
+
     setMyChannels(updated);
-    setEditingChannelId(null);
+    const newSubChannel = updated.find(c => c.id === selectedChannelId)?.subChannels.at(-1);
+    if (newSubChannel) {
+      setSelectedSubChannelId(newSubChannel.id);
+    }
+    setNewSubChannelData({ name: '', description: '' });
+    setShowSubChannelForm(false);
   };
 
   const deleteChannel = (id: string) => {
@@ -185,6 +246,24 @@ export default function VideosApp() {
     setMyChannels(updated);
     if (selectedChannelId === id) {
       setSelectedChannelId(updated[0]?.id || '');
+      setSelectedSubChannelId(null);
+    }
+  };
+
+  const deleteSubChannel = (channelId: string, subChannelId: string) => {
+    const updated = myChannels.map(c => {
+      if (c.id === channelId) {
+        return {
+          ...c,
+          subChannels: c.subChannels.filter(sc => sc.id !== subChannelId),
+        };
+      }
+      return c;
+    });
+
+    setMyChannels(updated);
+    if (selectedSubChannelId === subChannelId) {
+      setSelectedSubChannelId(null);
     }
   };
 
@@ -200,19 +279,7 @@ export default function VideosApp() {
     setMyChannels([...myChannels, subscribedChannel]);
     setAllChannels(allChannels.filter(c => c.id !== channelId));
     setSelectedChannelId(subscribedChannel.id);
-  };
-
-  const unsubscribeFromChannel = (id: string) => {
-    const updated = myChannels.filter(c => c.id !== id);
-    setMyChannels(updated);
-    if (selectedChannelId === id) {
-      setSelectedChannelId(updated[0]?.id || '');
-    }
-
-    const unsubscribedChannel = myChannels.find(c => c.id === id);
-    if (unsubscribedChannel && unsubscribedChannel.owner !== 'You') {
-      setAllChannels([...allChannels, unsubscribedChannel]);
-    }
+    setSelectedSubChannelId(null);
   };
 
   const uploadVideo = () => {
@@ -231,17 +298,57 @@ export default function VideosApp() {
       liked: false,
       uploader: 'You',
       channelId: selectedChannelId,
+      subChannelId: selectedSubChannelId || undefined,
     };
 
     setMyVideos([...myVideos, newVideo]);
+    
+    // Update sub-channel video count
+    if (selectedSubChannelId) {
+      const updated = myChannels.map(c => {
+        if (c.id === selectedChannelId) {
+          return {
+            ...c,
+            subChannels: c.subChannels.map(sc => 
+              sc.id === selectedSubChannelId 
+                ? { ...sc, videoCount: sc.videoCount + 1 }
+                : sc
+            ),
+          };
+        }
+        return c;
+      });
+      setMyChannels(updated);
+    }
+
     setSelectedVideoId(newVideo.id);
     setNewVideoData({ title: '', description: '', duration: '0:00' });
     setShowUploadForm(false);
   };
 
   const deleteVideo = (id: string) => {
+    const video = myVideos.find(v => v.id === id);
     const updated = myVideos.filter(v => v.id !== id);
     setMyVideos(updated);
+    
+    // Update sub-channel video count
+    if (video?.subChannelId) {
+      const channelUpdated = myChannels.map(c => {
+        if (c.id === video.channelId) {
+          return {
+            ...c,
+            subChannels: c.subChannels.map(sc => 
+              sc.id === video.subChannelId 
+                ? { ...sc, videoCount: Math.max(0, sc.videoCount - 1) }
+                : sc
+            ),
+          };
+        }
+        return c;
+      });
+      setMyChannels(channelUpdated);
+    }
+
     if (selectedVideoId === id) {
       setSelectedVideoId(updated[0]?.id || allVideos[0]?.id || '');
     }
@@ -334,42 +441,141 @@ export default function VideosApp() {
             </div>
           )}
 
-          {/* My Channels List */}
+          {/* My Channels List with Sub-channels */}
           <div className="flex-1 overflow-y-auto p-2">
             <p className="text-xs font-semibold text-foreground/60 px-2 py-1">My Channels</p>
             {myChannels.map(channel => (
-              <button
-                key={channel.id}
-                onClick={() => {
-                  setSelectedChannelId(channel.id);
-                  setViewMode('videos');
-                }}
-                className={`w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10 ${
-                  selectedChannelId === channel.id ? 'bg-accent/20' : ''
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
+              <div key={channel.id}>
+                <button
+                  onClick={() => {
+                    setSelectedChannelId(channel.id);
+                    setSelectedSubChannelId(null);
+                    setViewMode('videos');
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10 flex items-center justify-between ${
+                    selectedChannelId === channel.id && !selectedSubChannelId ? 'bg-accent/20' : ''
+                  }`}
+                >
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-sm truncate">{channel.name}</h4>
                     <p className="text-xs text-foreground/60 mt-1">{channel.subscribers.toLocaleString()} subscribers</p>
                   </div>
-                  {channel.owner === 'You' && (
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteChannel(channel.id);
-                      }}
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  )}
-                </div>
-              </button>
+                  <div className="flex items-center gap-1">
+                    {channel.owner === 'You' && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteChannel(channel.id);
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                    {channel.subChannels.length > 0 && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleChannelExpand(channel.id);
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                      >
+                        {expandedChannels.has(channel.id) ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </button>
+
+                {/* Sub-channels */}
+                {expandedChannels.has(channel.id) && channel.owner === 'You' && (
+                  <div className="ml-4 border-l border-border/50">
+                    {channel.subChannels.map(subChannel => (
+                      <button
+                        key={subChannel.id}
+                        onClick={() => {
+                          setSelectedChannelId(channel.id);
+                          setSelectedSubChannelId(subChannel.id);
+                          setViewMode('videos');
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10 flex items-center justify-between text-sm ${
+                          selectedSubChannelId === subChannel.id ? 'bg-accent/20' : ''
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-medium truncate flex items-center gap-2">
+                            <Folder className="w-3 h-3" />
+                            {subChannel.name}
+                          </h5>
+                          <p className="text-xs text-foreground/60 mt-1">{subChannel.videoCount} videos</p>
+                        </div>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteSubChannel(channel.id, subChannel.id);
+                          }}
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </button>
+                    ))}
+
+                    {/* Add Sub-channel Button */}
+                    {channel.owner === 'You' && (
+                      <button
+                        onClick={() => {
+                          setSelectedChannelId(channel.id);
+                          setShowSubChannelForm(true);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10 text-sm text-accent flex items-center gap-2"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add Sub-channel
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
+
+          {/* New Sub-channel Form */}
+          {showSubChannelForm && (
+            <div className="p-4 border-t border-border space-y-2">
+              <h4 className="font-semibold text-sm">New Sub-channel</h4>
+              <input
+                type="text"
+                placeholder="Sub-channel name"
+                value={newSubChannelData.name}
+                onChange={(e) => setNewSubChannelData({ ...newSubChannelData, name: e.target.value })}
+                className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+              />
+              <textarea
+                placeholder="Description"
+                value={newSubChannelData.description}
+                onChange={(e) => setNewSubChannelData({ ...newSubChannelData, description: e.target.value })}
+                className="w-full px-3 py-2 bg-background border border-border rounded text-sm h-12 resize-none"
+              />
+              <div className="flex gap-2">
+                <Button onClick={createSubChannel} size="sm" className="flex-1">
+                  Create
+                </Button>
+                <Button onClick={() => setShowSubChannelForm(false)} variant="outline" size="sm" className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* All Channels List */}
           <div className="border-t border-border p-2">
@@ -404,12 +610,16 @@ export default function VideosApp() {
                   <div className="flex items-center gap-4">
                     <div className="text-6xl">{selectedChannel.banner}</div>
                     <div>
-                      <h2 className="text-3xl font-bold">{selectedChannel.name}</h2>
-                      <p className="text-sm text-foreground/60 mt-1">{selectedChannel.description}</p>
+                      <h2 className="text-3xl font-bold">
+                        {selectedChannel.name}
+                        {selectedSubChannel && ` / ${selectedSubChannel.name}`}
+                      </h2>
+                      <p className="text-sm text-foreground/60 mt-1">
+                        {selectedSubChannel?.description || selectedChannel.description}
+                      </p>
                       <div className="flex gap-4 mt-3 text-sm text-foreground/60">
                         <span>{selectedChannel.subscribers.toLocaleString()} subscribers</span>
                         <span>Created {selectedChannel.createdDate}</span>
-                        <span>By {selectedChannel.owner}</span>
                       </div>
                     </div>
                   </div>
@@ -452,7 +662,7 @@ export default function VideosApp() {
                       </button>
                     ))
                   ) : (
-                    <p className="text-foreground/50 col-span-full text-center py-8">No videos in this channel yet</p>
+                    <p className="text-foreground/50 col-span-full text-center py-8">No videos yet</p>
                   )}
                 </div>
               </div>
@@ -476,7 +686,6 @@ export default function VideosApp() {
             {/* Player Area */}
             <div className="bg-black flex-1 flex items-center justify-center relative group">
               <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center relative">
-                {/* Thumbnail Placeholder */}
                 <div className="text-6xl">{selectedVideo.thumbnail}</div>
 
                 {/* Player Controls */}
@@ -486,12 +695,10 @@ export default function VideosApp() {
                   </div>
 
                   <div className="p-4 space-y-3">
-                    {/* Progress Bar */}
                     <div className="w-full bg-gray-600 h-1 rounded-full cursor-pointer hover:h-2 transition-all">
                       <div className="bg-accent h-full rounded-full" style={{ width: '35%' }}></div>
                     </div>
 
-                    {/* Controls */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Button
@@ -649,6 +856,18 @@ export default function VideosApp() {
               {myChannels.map(channel => (
                 <option key={channel.id} value={channel.id}>
                   {channel.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedSubChannelId || ''}
+              onChange={(e) => setSelectedSubChannelId(e.target.value || null)}
+              className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+            >
+              <option value="">Main channel</option>
+              {selectedChannel?.subChannels.map(sc => (
+                <option key={sc.id} value={sc.id}>
+                  {sc.name}
                 </option>
               ))}
             </select>
