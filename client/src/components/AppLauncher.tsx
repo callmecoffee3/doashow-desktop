@@ -19,6 +19,7 @@ import AppStore from '@/components/AppStore';
 import PodcastApp from '@/components/PodcastApp';
 import VideoAudioRecorder from '@/components/VideoAudioRecorder';
 import MintMobileApp from '@/components/MintMobileApp';
+import BusinessApp from '@/components/BusinessApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -191,6 +192,13 @@ export default function AppLauncher() {
       description: 'Wireless that makes sense',
       component: <MintMobileApp />,
     },
+    {
+      id: 'business',
+      name: 'Business',
+      icon: '💼',
+      description: 'Business management suite',
+      component: <BusinessApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -208,6 +216,7 @@ export default function AppLauncher() {
       podcast: 1200,
       videoaudiorecorder: 1200,
       mintmobile: 1400,
+      business: 1400,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -224,6 +233,7 @@ export default function AppLauncher() {
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
+      business: 900,
     };
 
     openWindow({
