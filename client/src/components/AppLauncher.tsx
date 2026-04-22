@@ -20,6 +20,8 @@ import PodcastApp from '@/components/PodcastApp';
 import VideoAudioRecorder from '@/components/VideoAudioRecorder';
 import MintMobileApp from '@/components/MintMobileApp';
 import BusinessApp from '@/components/BusinessApp';
+import ContractsApp from '@/components/ContractsApp';
+import ConstructionApp from '@/components/ConstructionApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -199,6 +201,20 @@ export default function AppLauncher() {
       description: 'Business management suite',
       component: <BusinessApp />,
     },
+    {
+      id: 'contracts',
+      name: 'Contracts',
+      icon: '📋',
+      description: 'Production contracts & agreements',
+      component: <ContractsApp />,
+    },
+    {
+      id: 'construction',
+      name: 'Construction',
+      icon: '🔨',
+      description: 'Set construction & logistics',
+      component: <ConstructionApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -217,6 +233,8 @@ export default function AppLauncher() {
       videoaudiorecorder: 1200,
       mintmobile: 1400,
       business: 1400,
+      contracts: 1400,
+      construction: 1400,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -234,6 +252,8 @@ export default function AppLauncher() {
       videoaudiorecorder: 900,
       mintmobile: 900,
       business: 900,
+      contracts: 900,
+      construction: 900,
     };
 
     openWindow({
