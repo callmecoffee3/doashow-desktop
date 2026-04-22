@@ -24,6 +24,7 @@ import ContractsApp from '@/components/ContractsApp';
 import ConstructionApp from '@/components/ConstructionApp';
 import DashboardApp from '@/components/DashboardApp';
 import WebsitesApp from '@/components/WebsitesApp';
+import TodoApp from '@/components/TodoApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -232,6 +233,13 @@ export default function AppLauncher() {
       icon: '🌐',
       description: 'Marketing & promotion sites',
       component: <WebsitesApp />,
+    },
+    {
+      id: 'todo',
+      name: 'Todo List',
+      icon: '✓',
+      description: 'Manage tasks and stay organized',
+      component: <TodoApp />,
     }
   ];
 
