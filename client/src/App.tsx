@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { WindowProvider } from "./contexts/WindowContext";
+import { DesktopShortcutsProvider } from "./contexts/DesktopShortcutsContext";
 import Home from "./pages/Home";
 
 
@@ -32,10 +33,12 @@ function App() {
         // switchable
       >
         <WindowProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <DesktopShortcutsProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </DesktopShortcutsProvider>
         </WindowProvider>
       </ThemeProvider>
     </ErrorBoundary>

@@ -4,6 +4,7 @@ import DraggableWindow from '@/components/DraggableWindow';
 import AppLauncher from '@/components/AppLauncher';
 import StartMenu from '@/components/StartMenu';
 import ScrollingBanner from '@/components/ScrollingBanner';
+import DesktopShortcuts from '@/components/DesktopShortcuts';
 import { Button } from '@/components/ui/button';
 import { Grid3x3, Clock } from 'lucide-react';
 
@@ -42,6 +43,9 @@ export default function Desktop() {
 
       {/* Main Desktop Area */}
       <div className="flex-1 relative">
+        {/* Desktop Shortcuts */}
+        <DesktopShortcuts />
+
         {/* App Launcher Background */}
         {showAppLauncher && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 overflow-y-auto">

@@ -18,7 +18,9 @@ import PhotoApp from '@/components/PhotoApp';
 import AppStore from '@/components/AppStore';
 import PodcastApp from '@/components/PodcastApp';
 import VideoAudioRecorder from '@/components/VideoAudioRecorder';
+import MintMobileApp from '@/components/MintMobileApp';
 import { useWindow } from '@/contexts/WindowContext';
+import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
 interface App {
   id: string;
@@ -30,6 +32,7 @@ interface App {
 
 export default function AppLauncher() {
   const { openWindow } = useWindow();
+  const { addShortcut } = useDesktopShortcuts();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     const saved = localStorage.getItem('doashow_app_view_mode');
     return (saved as 'grid' | 'list') || 'grid';
@@ -181,6 +184,13 @@ export default function AppLauncher() {
       description: 'Record video and audio',
       component: <VideoAudioRecorder />,
     },
+    {
+      id: 'mintmobile',
+      name: 'Mint Mobile',
+      icon: '📱',
+      description: 'Wireless that makes sense',
+      component: <MintMobileApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -197,6 +207,7 @@ export default function AppLauncher() {
       appstore: 1600,
       podcast: 1200,
       videoaudiorecorder: 1200,
+      mintmobile: 1400,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -212,6 +223,7 @@ export default function AppLauncher() {
       appstore: 900,
       podcast: 800,
       videoaudiorecorder: 900,
+      mintmobile: 900,
     };
 
     openWindow({
@@ -255,18 +267,28 @@ export default function AppLauncher() {
           // Grid View
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {apps.map(app => (
-              <Button
-                key={app.id}
-                onClick={() => handleLaunchApp(app)}
-                variant="outline"
-                className="h-auto flex flex-col items-center justify-center gap-3 p-6 hover:bg-accent/10 transition-colors"
-              >
-                <span className="text-5xl">{app.icon}</span>
-                <div className="text-center">
-                  <div className="font-semibold text-sm">{app.name}</div>
-                  <div className="text-xs text-foreground/60">{app.description}</div>
-                </div>
-              </Button>
+              <div key={app.id} className="relative group">
+                <Button
+                  onClick={() => handleLaunchApp(app)}
+                  variant="outline"
+                  className="h-auto w-full flex flex-col items-center justify-center gap-3 p-6 hover:bg-accent/10 transition-colors"
+                >
+                  <span className="text-5xl">{app.icon}</span>
+                  <div className="text-center">
+                    <div className="font-semibold text-sm">{app.name}</div>
+                    <div className="text-xs text-foreground/60">{app.description}</div>
+                  </div>
+                </Button>
+                <Button
+                  onClick={() => addShortcut(app.id, app.name, app.icon)}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Pin to desktop"
+                >
+                  📌
+                </Button>
+              </div>
             ))}
           </div>
         ) : (
