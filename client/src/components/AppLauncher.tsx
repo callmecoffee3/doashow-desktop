@@ -13,6 +13,8 @@ import MessengerApp from '@/components/MessengerApp';
 import GroupsApp from '@/components/GroupsApp';
 import PagesApp from '@/components/PagesApp';
 import VideosApp from '@/components/VideosApp';
+import PhotoApp from '@/components/PhotoApp';
+import AppStore from '@/components/AppStore';
 
 interface App {
   id: string;
@@ -138,6 +140,20 @@ export default function AppLauncher() {
       description: 'Video playback',
       component: <VideosApp />,
     },
+    {
+      id: 'photos',
+      name: 'Photos',
+      icon: '📷',
+      description: 'Photo gallery and albums',
+      component: <PhotoApp />,
+    },
+    {
+      id: 'appstore',
+      name: 'App Store',
+      icon: '🏪',
+      description: 'Browse and install apps',
+      component: <AppStore />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -150,6 +166,8 @@ export default function AppLauncher() {
       groups: 1200,
       pages: 1200,
       videos: 1400,
+      photos: 1400,
+      appstore: 1600,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -161,6 +179,8 @@ export default function AppLauncher() {
       groups: 700,
       pages: 700,
       videos: 800,
+      photos: 800,
+      appstore: 900,
     };
 
     openWindow({
