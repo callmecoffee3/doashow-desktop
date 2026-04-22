@@ -36,6 +36,7 @@ const DEFAULT_TICKER_MESSAGES: TickerMessage[] = [
   { text: '📊 Usage: 156 GB of 256 GB used', icon: Info, color: 'text-blue-400' },
   { text: '🛡️ Security: All files encrypted', icon: CheckCircle, color: 'text-green-400' },
   { text: '⏱️ Last updated: Just now', icon: Info, color: 'text-blue-400' },
+  { text: '🎬 This is just a simulation', icon: Info, color: 'text-purple-400' },
 ];
 
 // Sample file structure with hierarchical organization
