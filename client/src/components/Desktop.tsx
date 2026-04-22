@@ -28,6 +28,15 @@ export default function Desktop() {
 
   return (
     <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden flex flex-col">
+      {/* DoaShow Header */}
+      <div className="bg-gradient-to-r from-accent/20 to-accent/10 border-b border-accent/30 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🎬</span>
+          <h1 className="text-xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">DoaShow</h1>
+        </div>
+        <p className="text-xs text-foreground/60">Desktop Environment v1.0</p>
+      </div>
+
       {/* Scrolling Banner */}
       <ScrollingBanner autoScroll={true} scrollInterval={5000} />
 
