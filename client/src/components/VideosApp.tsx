@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Play, Pause, Volume2, VolumeX, Maximize, Download, Heart, Upload, X } from 'lucide-react';
+import { Plus, Trash2, Play, Pause, Volume2, VolumeX, Maximize, Download, Heart, Upload, X, Edit2, Save, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Video {
@@ -14,9 +14,53 @@ interface Video {
   url: string;
   liked: boolean;
   uploader: string;
+  channelId: string;
+}
+
+interface Channel {
+  id: string;
+  name: string;
+  description: string;
+  subscribers: number;
+  createdDate: string;
+  owner: string;
+  banner: string;
 }
 
 export default function VideosApp() {
+  const [myChannels, setMyChannels] = useState<Channel[]>([
+    {
+      id: '1',
+      name: 'My Channel',
+      description: 'Welcome to my channel! Here I share tutorials and guides.',
+      subscribers: 1250,
+      createdDate: '2024-01-01',
+      owner: 'You',
+      banner: '🎬',
+    },
+  ]);
+
+  const [allChannels, setAllChannels] = useState<Channel[]>([
+    {
+      id: '2',
+      name: 'Tech Tips & Tricks',
+      description: 'Daily tech tips and productivity hacks',
+      subscribers: 5420,
+      createdDate: '2024-01-05',
+      owner: 'John Doe',
+      banner: '💻',
+    },
+    {
+      id: '3',
+      name: 'Creative Content',
+      description: 'Art, design, and creative tutorials',
+      subscribers: 3180,
+      createdDate: '2024-01-10',
+      owner: 'Jane Smith',
+      banner: '🎨',
+    },
+  ]);
+
   const [myVideos, setMyVideos] = useState<Video[]>([
     {
       id: '1',
@@ -30,6 +74,7 @@ export default function VideosApp() {
       url: 'https://example.com/video1.mp4',
       liked: false,
       uploader: 'You',
+      channelId: '1',
     },
     {
       id: '2',
@@ -43,6 +88,7 @@ export default function VideosApp() {
       url: 'https://example.com/video2.mp4',
       liked: false,
       uploader: 'You',
+      channelId: '1',
     },
   ]);
 
@@ -59,6 +105,7 @@ export default function VideosApp() {
       url: 'https://example.com/video3.mp4',
       liked: false,
       uploader: 'John Doe',
+      channelId: '2',
     },
     {
       id: '4',
@@ -71,30 +118,102 @@ export default function VideosApp() {
       thumbnail: '🎞️',
       url: 'https://example.com/video4.mp4',
       liked: false,
-      uploader: 'Admin',
+      uploader: 'John Doe',
+      channelId: '2',
     },
   ]);
 
   const [selectedVideoId, setSelectedVideoId] = useState<string>('1');
+  const [selectedChannelId, setSelectedChannelId] = useState<string>('1');
+  const [viewMode, setViewMode] = useState<'videos' | 'channels' | string>('videos');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(100);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [showChannelForm, setShowChannelForm] = useState(false);
+  const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
   const [newVideoData, setNewVideoData] = useState({
     title: '',
     description: '',
     duration: '0:00',
   });
+  const [newChannelData, setNewChannelData] = useState({
+    name: '',
+    description: '',
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedVideo = myVideos.find(v => v.id === selectedVideoId) || allVideos.find(v => v.id === selectedVideoId);
-  const allVideosList = [...myVideos, ...allVideos];
+  const selectedChannel = myChannels.find(c => c.id === selectedChannelId) || allChannels.find(c => c.id === selectedChannelId);
+  const channelVideos = [...myVideos, ...allVideos].filter(v => v.channelId === selectedChannelId);
 
   useEffect(() => {
     localStorage.setItem('doashow_my_videos', JSON.stringify(myVideos));
     localStorage.setItem('doashow_all_videos', JSON.stringify(allVideos));
-  }, [myVideos, allVideos]);
+    localStorage.setItem('doashow_my_channels', JSON.stringify(myChannels));
+    localStorage.setItem('doashow_all_channels', JSON.stringify(allChannels));
+  }, [myVideos, allVideos, myChannels, allChannels]);
+
+  const createChannel = () => {
+    if (!newChannelData.name.trim()) return;
+
+    const newChannel: Channel = {
+      id: Date.now().toString(),
+      name: newChannelData.name,
+      description: newChannelData.description,
+      subscribers: 0,
+      createdDate: new Date().toISOString().split('T')[0],
+      owner: 'You',
+      banner: '🎬',
+    };
+
+    setMyChannels([...myChannels, newChannel]);
+    setSelectedChannelId(newChannel.id);
+    setNewChannelData({ name: '', description: '' });
+    setShowChannelForm(false);
+  };
+
+  const updateChannel = (id: string, updates: Partial<Channel>) => {
+    const updated = myChannels.map(c => (c.id === id ? { ...c, ...updates } : c));
+    setMyChannels(updated);
+    setEditingChannelId(null);
+  };
+
+  const deleteChannel = (id: string) => {
+    const updated = myChannels.filter(c => c.id !== id);
+    setMyChannels(updated);
+    if (selectedChannelId === id) {
+      setSelectedChannelId(updated[0]?.id || '');
+    }
+  };
+
+  const subscribeToChannel = (channelId: string) => {
+    const channelToSubscribe = allChannels.find(c => c.id === channelId);
+    if (!channelToSubscribe) return;
+
+    const subscribedChannel: Channel = {
+      ...channelToSubscribe,
+      subscribers: channelToSubscribe.subscribers + 1,
+    };
+
+    setMyChannels([...myChannels, subscribedChannel]);
+    setAllChannels(allChannels.filter(c => c.id !== channelId));
+    setSelectedChannelId(subscribedChannel.id);
+  };
+
+  const unsubscribeFromChannel = (id: string) => {
+    const updated = myChannels.filter(c => c.id !== id);
+    setMyChannels(updated);
+    if (selectedChannelId === id) {
+      setSelectedChannelId(updated[0]?.id || '');
+    }
+
+    const unsubscribedChannel = myChannels.find(c => c.id === id);
+    if (unsubscribedChannel && unsubscribedChannel.owner !== 'You') {
+      setAllChannels([...allChannels, unsubscribedChannel]);
+    }
+  };
 
   const uploadVideo = () => {
     if (!newVideoData.title.trim()) return;
@@ -111,6 +230,7 @@ export default function VideosApp() {
       url: 'https://example.com/video-' + Date.now() + '.mp4',
       liked: false,
       uploader: 'You',
+      channelId: selectedChannelId,
     };
 
     setMyVideos([...myVideos, newVideo]);
@@ -174,13 +294,178 @@ export default function VideosApp() {
     }
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const duration = '0:00';
-      setNewVideoData({ ...newVideoData, duration });
-    }
-  };
+  if (viewMode === ('channels' as const)) {
+    return (
+      <div className="flex h-full bg-background">
+        {/* Channels Sidebar */}
+        <div className="w-80 border-r border-border bg-secondary flex flex-col">
+          <div className="p-4 border-b border-border">
+            <h2 className="text-lg font-bold mb-3">My Channels</h2>
+            <Button onClick={() => setShowChannelForm(true)} className="w-full gap-2">
+              <Plus className="w-4 h-4" />
+              New Channel
+            </Button>
+          </div>
+
+          {/* New Channel Form */}
+          {showChannelForm && (
+            <div className="p-4 border-b border-border space-y-2">
+              <input
+                type="text"
+                placeholder="Channel name"
+                value={newChannelData.name}
+                onChange={(e) => setNewChannelData({ ...newChannelData, name: e.target.value })}
+                className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+              />
+              <textarea
+                placeholder="Channel description"
+                value={newChannelData.description}
+                onChange={(e) => setNewChannelData({ ...newChannelData, description: e.target.value })}
+                className="w-full px-3 py-2 bg-background border border-border rounded text-sm h-16 resize-none"
+              />
+              <div className="flex gap-2">
+                <Button onClick={createChannel} size="sm" className="flex-1">
+                  Create
+                </Button>
+                <Button onClick={() => setShowChannelForm(false)} variant="outline" size="sm" className="flex-1">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* My Channels List */}
+          <div className="flex-1 overflow-y-auto p-2">
+            <p className="text-xs font-semibold text-foreground/60 px-2 py-1">My Channels</p>
+            {myChannels.map(channel => (
+              <button
+                key={channel.id}
+                onClick={() => {
+                  setSelectedChannelId(channel.id);
+                  setViewMode('videos');
+                }}
+                className={`w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10 ${
+                  selectedChannelId === channel.id ? 'bg-accent/20' : ''
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm truncate">{channel.name}</h4>
+                    <p className="text-xs text-foreground/60 mt-1">{channel.subscribers.toLocaleString()} subscribers</p>
+                  </div>
+                  {channel.owner === 'You' && (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteChannel(channel.id);
+                      }}
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* All Channels List */}
+          <div className="border-t border-border p-2">
+            <p className="text-xs font-semibold text-foreground/60 px-2 py-1">Discover Channels</p>
+            {allChannels.map(channel => (
+              <button
+                key={channel.id}
+                onClick={() => subscribeToChannel(channel.id)}
+                className="w-full text-left px-3 py-2 rounded transition-colors hover:bg-accent/10"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm truncate">{channel.name}</h4>
+                    <p className="text-xs text-foreground/60 mt-1">{channel.subscribers.toLocaleString()} subscribers</p>
+                  </div>
+                  <Button size="sm" className="flex-shrink-0">
+                    Subscribe
+                  </Button>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Channel Details */}
+        <div className="flex-1 flex flex-col">
+          {selectedChannel ? (
+            <>
+              {/* Channel Header */}
+              <div className="border-b border-border p-6 bg-card">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="text-6xl">{selectedChannel.banner}</div>
+                    <div>
+                      <h2 className="text-3xl font-bold">{selectedChannel.name}</h2>
+                      <p className="text-sm text-foreground/60 mt-1">{selectedChannel.description}</p>
+                      <div className="flex gap-4 mt-3 text-sm text-foreground/60">
+                        <span>{selectedChannel.subscribers.toLocaleString()} subscribers</span>
+                        <span>Created {selectedChannel.createdDate}</span>
+                        <span>By {selectedChannel.owner}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {selectedChannel.owner === 'You' && (
+                    <Button variant="outline" size="icon">
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Channel Videos */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <h3 className="text-xl font-bold mb-4">Videos</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {channelVideos.length > 0 ? (
+                    channelVideos.map(video => (
+                      <button
+                        key={video.id}
+                        onClick={() => {
+                          setSelectedVideoId(video.id);
+                          setViewMode('videos');
+                        }}
+                        className="group text-left"
+                      >
+                        <div className="bg-card border border-border rounded-lg overflow-hidden hover:border-accent transition-colors">
+                          <div className="aspect-video bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform">
+                            {video.thumbnail}
+                          </div>
+                          <div className="p-3">
+                            <h4 className="font-semibold text-sm truncate">{video.title}</h4>
+                            <p className="text-xs text-foreground/60 mt-1">{video.duration}</p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-foreground/50">
+                              <span>{video.views.toLocaleString()} views</span>
+                              <span>•</span>
+                              <span>{video.uploadedDate}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-foreground/50 col-span-full text-center py-8">No videos in this channel yet</p>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-foreground/50">
+              <p>Select a channel to view details</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full bg-background">
@@ -306,8 +591,26 @@ export default function VideosApp() {
 
       {/* Playlist Sidebar */}
       <div className="w-96 border-l border-border bg-secondary flex flex-col">
+        <div className="p-4 border-b border-border flex gap-2">
+          <Button
+            onClick={() => setViewMode('videos' as const)}
+            variant={viewMode === ('videos' as const) ? 'default' : 'outline'}
+            className="flex-1 gap-2"
+          >
+            Videos
+          </Button>
+          <Button
+            onClick={() => setViewMode('channels' as const)}
+            variant={viewMode === ('channels' as const) ? 'default' : 'outline'}
+            className="flex-1 gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Channels
+          </Button>
+        </div>
+
         <div className="p-4 border-b border-border">
-          <h3 className="text-lg font-bold mb-3">Videos</h3>
+          <h3 className="text-lg font-bold mb-3">Upload Video</h3>
           <Button onClick={() => setShowUploadForm(true)} className="w-full gap-2">
             <Upload className="w-4 h-4" />
             Upload Video
@@ -337,11 +640,22 @@ export default function VideosApp() {
               onChange={(e) => setNewVideoData({ ...newVideoData, duration: e.target.value })}
               className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
             />
+            <select
+              value={selectedChannelId}
+              onChange={(e) => setSelectedChannelId(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
+            >
+              <option value="">Select channel...</option>
+              {myChannels.map(channel => (
+                <option key={channel.id} value={channel.id}>
+                  {channel.name}
+                </option>
+              ))}
+            </select>
             <input
               ref={fileInputRef}
               type="file"
               accept="video/*"
-              onChange={handleFileSelect}
               className="w-full px-3 py-2 bg-background border border-border rounded text-sm"
             />
             <div className="flex gap-2">
