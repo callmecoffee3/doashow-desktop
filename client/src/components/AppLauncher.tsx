@@ -22,6 +22,8 @@ import MintMobileApp from '@/components/MintMobileApp';
 import BusinessApp from '@/components/BusinessApp';
 import ContractsApp from '@/components/ContractsApp';
 import ConstructionApp from '@/components/ConstructionApp';
+import DashboardApp from '@/components/DashboardApp';
+import WebsitesApp from '@/components/WebsitesApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -215,6 +217,20 @@ export default function AppLauncher() {
       description: 'Set construction & logistics',
       component: <ConstructionApp />,
     },
+    {
+      id: 'dashboard',
+      name: 'Dashboard',
+      icon: '📊',
+      description: 'Studio analytics & metrics',
+      component: <DashboardApp />,
+    },
+    {
+      id: 'websites',
+      name: 'Websites',
+      icon: '🌐',
+      description: 'Marketing & promotion sites',
+      component: <WebsitesApp />,
+    },
   ];
 
   const handleLaunchApp = (app: App) => {
@@ -235,6 +251,8 @@ export default function AppLauncher() {
       business: 1400,
       contracts: 1400,
       construction: 1400,
+      dashboard: 1600,
+      websites: 1400,
     };
 
     const heightMap: { [key: string]: number } = {
@@ -254,6 +272,8 @@ export default function AppLauncher() {
       business: 900,
       contracts: 900,
       construction: 900,
+      dashboard: 1000,
+      websites: 900,
     };
 
     openWindow({
