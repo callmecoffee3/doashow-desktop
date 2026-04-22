@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, Folder, File, Image, Music, FileText, Archive, AlertCircle, CheckCircle, Info, Upload, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +11,7 @@ interface FileItem {
   modified?: string;
   children?: FileItem[];
   blob?: Blob;
+  orange?: boolean;
 }
 
 interface FileExplorerProps {
@@ -20,13 +21,95 @@ interface FileExplorerProps {
 const DB_NAME = 'DoaShowDB';
 const STORE_NAME = 'files';
 
-// Sample file structure
+// Sample file structure with hierarchical organization
 const sampleFileStructure: FileItem[] = [
   {
     id: 'root',
     name: 'My Computer',
     type: 'folder',
     children: [
+      {
+        id: 'portable-c',
+        name: 'portable-c',
+        type: 'folder',
+        children: [
+          { id: 'start', name: '0. Start', type: 'folder', children: [] },
+          { id: 'activities', name: 'A. activities', type: 'folder', children: [] },
+          { id: 'posts', name: 'B. posts', type: 'folder', children: [] },
+          {
+            id: 'operations',
+            name: 'C. OPERATIONS',
+            type: 'folder',
+            orange: true,
+            children: [
+              {
+                id: 'ops-others',
+                name: '$ (others)',
+                type: 'folder',
+                children: [
+                  { id: 'ops-hidden', name: '$hiddenfolders', type: 'folder', children: [] },
+                ],
+              },
+              {
+                id: 'ops-price',
+                name: '-0 price',
+                type: 'folder',
+                children: [
+                  {
+                    id: 'price-circle',
+                    name: '--Prices Circle',
+                    type: 'folder',
+                    children: [
+                      { id: 'rolls-a', name: '(+) A_rolls', type: 'folder', children: [] },
+                      { id: 'rolls-b', name: '(+) B_rolls', type: 'folder', children: [] },
+                      { id: 'rolls-c', name: '(+) C_rolls', type: 'folder', children: [] },
+                      { id: 'category', name: '(+) Category', type: 'folder', children: [] },
+                      { id: 'nav', name: '(+) NAV', type: 'folder', children: [] },
+                      { id: 'nav-circle', name: '(+) NAV CIRCLE', type: 'folder', children: [] },
+                      { id: 'morgue', name: 'A_.00 1 MORGUE', type: 'folder', children: [] },
+                      { id: 'rolls-main', name: 'A_.00 1 ROLLS', type: 'folder', children: [] },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          { id: 'd-morse', name: 'D. Morse', type: 'folder', children: [] },
+          { id: 'e-experiments', name: 'E. Experiments', type: 'folder', children: [] },
+          { id: 'f-something', name: 'F. Something', type: 'folder', children: [] },
+          { id: 'g-something2', name: 'G. Something', type: 'folder', children: [] },
+          { id: 'i-games', name: 'I. Games', type: 'folder', children: [] },
+          { id: 'j-tv', name: 'J. TV', type: 'folder', children: [] },
+          { id: 'k-movies', name: 'K. Movies', type: 'folder', children: [] },
+          { id: 'l-radio', name: 'L. Radio', type: 'folder', children: [] },
+          { id: 'm-news', name: 'M. News', type: 'folder', children: [] },
+          { id: 'n-science', name: 'N. Science', type: 'folder', children: [] },
+          { id: 'o-medicine', name: 'O. Medicine', type: 'folder', children: [] },
+          { id: 'p-tech', name: 'P. Tech', type: 'folder', children: [] },
+          { id: 'q-music', name: 'Q. Music', type: 'folder', children: [] },
+          { id: 'r-recording', name: 'R. Recording', type: 'folder', children: [] },
+          { id: 's-instruments', name: 'S. Instruments', type: 'folder', children: [] },
+          { id: 't-people', name: 'T. People', type: 'folder', children: [] },
+          { id: 'u-computer', name: 'U. Computer', type: 'folder', children: [] },
+          { id: 'v-gadgets', name: 'V. Gadgets', type: 'folder', children: [] },
+          { id: 'w-characters', name: 'W. Characters', type: 'folder', children: [] },
+          { id: 'x-cast', name: 'X. Cast', type: 'folder', children: [] },
+          { id: 'y-guest', name: 'Y. Guest', type: 'folder', children: [] },
+          { id: 'z-zombie', name: 'Z. Zombie', type: 'folder', children: [] },
+        ],
+      },
+      {
+        id: 'storage-d',
+        name: 'storage-d',
+        type: 'folder',
+        children: [],
+      },
+      {
+        id: 'device-a',
+        name: 'device-a',
+        type: 'folder',
+        children: [],
+      },
       {
         id: 'documents',
         name: 'Documents',
@@ -99,237 +182,209 @@ function formatFileSize(bytes: number): string {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-function getFileType(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase() || '';
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
-  if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) return 'audio';
-  if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) return 'video';
-  if (['pdf'].includes(ext)) return 'pdf';
-  if (['txt', 'md', 'json', 'csv'].includes(ext)) return 'txt';
-  if (['zip', 'rar', '7z', 'tar'].includes(ext)) return 'archive';
-  return 'file';
-}
+function FileTreeItem({
+  item,
+  level = 0,
+  onUpload,
+  onDelete,
+}: {
+  item: FileItem;
+  level?: number;
+  onUpload: (parentId: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(level < 2);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-export default function FileExplorer({ onFileSelect }: FileExplorerProps) {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']));
-  const [currentPath, setCurrentPath] = useState<string[]>(['My Computer']);
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const [fileStructure, setFileStructure] = useState<FileItem[]>(sampleFileStructure);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingTo, setUploadingTo] = useState<string | null>(null);
+  const hasChildren = item.children && item.children.length > 0;
+  const isFolder = item.type === 'folder';
 
-  const tickerMessages = [
-    { type: 'info', text: '📁 Total files: 12 | Folders: 5' },
-    { type: 'success', text: '✓ System running smoothly' },
-    { type: 'info', text: '💾 Storage: 45GB available' },
-    { type: 'info', text: '🔒 All files secured' },
-    { type: 'success', text: '✓ Last backup: Today at 2:15 PM' },
-    { type: 'info', text: '📊 CPU Usage: 12% | Memory: 34%' },
-  ];
+  return (
+    <div>
+      <div
+        className={`flex items-center gap-2 px-3 py-2 hover:bg-accent/10 rounded transition-colors ${
+          item.orange ? 'bg-orange-500/10 border-l-2 border-orange-500' : ''
+        }`}
+        style={{ paddingLeft: `${12 + level * 16}px` }}
+        onMouseEnter={() => setHoveredId(item.id)}
+        onMouseLeave={() => setHoveredId(null)}
+      >
+        {isFolder && hasChildren && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-0 hover:bg-accent/20 rounded"
+          >
+            <ChevronRight
+              className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            />
+          </button>
+        )}
+        {isFolder && !hasChildren && <div className="w-4" />}
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % tickerMessages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+        {isFolder ? (
+          <Folder className={`w-4 h-4 ${item.orange ? 'text-orange-500' : 'text-blue-400'}`} />
+        ) : (
+          getFileIcon(item.fileType)
+        )}
 
-  const toggleFolder = (id: string) => {
-    setExpandedFolders(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+        <span className="text-sm flex-1 truncate">{item.name}</span>
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, targetFolderId: string) => {
-    const files = e.currentTarget.files;
-    if (!files) return;
+        {item.size && (
+          <span className="text-xs text-foreground/50">{formatFileSize(item.size)}</span>
+        )}
 
-    const newStructure = JSON.parse(JSON.stringify(fileStructure));
-
-    const addFilesToFolder = (items: FileItem[], folderId: string) => {
-      for (const item of items) {
-        if (item.id === folderId && item.type === 'folder') {
-          if (!item.children) item.children = [];
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const newFile: FileItem = {
-              id: `file_${Date.now()}_${i}`,
-              name: file.name,
-              type: 'file',
-              fileType: getFileType(file.name),
-              size: file.size,
-              modified: new Date().toLocaleString(),
-              blob: file,
-            };
-            item.children.push(newFile);
-          }
-          return true;
-        }
-        if (item.children) {
-          if (addFilesToFolder(item.children, folderId)) return true;
-        }
-      }
-      return false;
-    };
-
-    addFilesToFolder(newStructure, targetFolderId);
-    setFileStructure(newStructure);
-    setUploadingTo(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const deleteFile = (fileId: string) => {
-    const newStructure = JSON.parse(JSON.stringify(fileStructure));
-
-    const removeFile = (items: FileItem[]): boolean => {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].id === fileId) {
-          items.splice(i, 1);
-          return true;
-        }
-        if (items[i].children && removeFile(items[i].children!)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    removeFile(newStructure);
-    setFileStructure(newStructure);
-  };
-
-  const downloadFile = (file: FileItem) => {
-    if (file.blob) {
-      const url = URL.createObjectURL(file.blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  };
-
-  const renderFileTree = (items: FileItem[], depth = 0) => {
-    return items.map(item => (
-      <div key={item.id}>
-        <div
-          className="flex items-center gap-2 px-3 py-2 hover:bg-accent/10 cursor-pointer text-sm group"
-          style={{ paddingLeft: `${12 + depth * 16}px` }}
-          onClick={() => {
-            if (item.type === 'folder') {
-              toggleFolder(item.id);
-            } else {
-              onFileSelect?.(item);
-            }
-          }}
-        >
-          {item.type === 'folder' ? (
-            <>
-              <ChevronRight
-                className={`w-4 h-4 transition-transform ${
-                  expandedFolders.has(item.id) ? 'rotate-90' : ''
-                }`}
-              />
-              <Folder className="w-4 h-4 text-blue-400" />
-            </>
-          ) : (
-            <>
-              <div className="w-4" />
-              {getFileIcon(item.fileType)}
-            </>
-          )}
-          <span className="flex-1">{item.name}</span>
-          {item.size && (
-            <span className="text-xs text-foreground/50 ml-auto">
-              {formatFileSize(item.size)}
-            </span>
-          )}
-          {item.type === 'folder' && (
+        {hoveredId === item.id && isFolder && (
+          <div className="flex gap-1">
             <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                setUploadingTo(item.id);
-                fileInputRef.current?.click();
-              }}
+              onClick={() => onUpload(item.id)}
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100"
+              className="h-6 w-6"
+              title="Upload files"
             >
               <Upload className="w-3 h-3" />
             </Button>
-          )}
-        </div>
-
-        {item.type === 'folder' && expandedFolders.has(item.id) && item.children && (
-          renderFileTree(item.children, depth + 1)
+            <Button
+              onClick={() => onDelete(item.id)}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              title="Delete folder"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
         )}
       </div>
-    ));
+
+      {isFolder && expanded && item.children && item.children.length > 0 && (
+        <div>
+          {item.children.map(child => (
+            <FileTreeItem
+              key={child.id}
+              item={child}
+              level={level + 1}
+              onUpload={onUpload}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function FileExplorer() {
+  const [fileStructure, setFileStructure] = useState<FileItem[]>(sampleFileStructure);
+  const [uploadingFolderId, setUploadingFolderId] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const tickerMessages = [
+    { text: '💾 Storage: 256 GB available', icon: Info, color: 'text-blue-400' },
+    { text: '✅ System Status: All systems operational', icon: CheckCircle, color: 'text-green-400' },
+    { text: '📁 Total Files: 1,247 items', icon: Info, color: 'text-blue-400' },
+    { text: '⚠️ Backup: Last backup 2 hours ago', icon: AlertCircle, color: 'text-orange-400' },
+    { text: '🔄 Sync: Cloud sync enabled', icon: CheckCircle, color: 'text-green-400' },
+    { text: '📊 Usage: 156 GB of 256 GB used', icon: Info, color: 'text-blue-400' },
+    { text: '🛡️ Security: All files encrypted', icon: CheckCircle, color: 'text-green-400' },
+    { text: '⏱️ Last updated: Just now', icon: Info, color: 'text-blue-400' },
+  ];
+
+  const [currentMessageIndex, setCurrentMessageIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % tickerMessages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [tickerMessages.length]);
+
+  const handleUpload = (parentId: string) => {
+    setUploadingFolderId(parentId);
+    fileInputRef.current?.click();
   };
 
-  const currentMessage = tickerMessages[tickerIndex];
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !uploadingFolderId) return;
 
-  const getTickerIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'alert':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      default:
-        return <Info className="w-4 h-4 text-blue-500" />;
-    }
+    const newFiles: FileItem[] = Array.from(files).map((file) => ({
+      id: `file-${Date.now()}-${Math.random()}`,
+      name: file.name,
+      type: 'file',
+      fileType: file.type.split('/')[0] || 'file',
+      size: file.size,
+      modified: new Date().toISOString().split('T')[0],
+      blob: file,
+    }));
+
+    const updateFileStructure = (items: FileItem[]): FileItem[] => {
+      return items.map((item) => {
+        if (item.id === uploadingFolderId && item.children) {
+          return { ...item, children: [...item.children, ...newFiles] };
+        }
+        if (item.children) {
+          return { ...item, children: updateFileStructure(item.children) };
+        }
+        return item;
+      });
+    };
+
+    setFileStructure(updateFileStructure(fileStructure));
+    setUploadingFolderId(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const handleDelete = (id: string) => {
+    const deleteItem = (items: FileItem[]): FileItem[] => {
+      return items
+        .filter((item) => item.id !== id)
+        .map((item) => ({
+          ...item,
+          children: item.children ? deleteItem(item.children) : undefined,
+        }));
+    };
+
+    setFileStructure(deleteItem(fileStructure));
+  };
+
+  const currentMessage = tickerMessages[currentMessageIndex];
+  const MessageIcon = currentMessage.icon;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       {/* Scrolling Ticker */}
-      <div className="bg-gradient-to-r from-accent/20 to-accent/10 border-b border-accent/30 px-4 py-2 overflow-hidden">
-        <div className="flex items-center gap-3">
-          {getTickerIcon(currentMessage.type)}
-          <div className="flex-1 overflow-hidden">
-            <div className="text-sm font-medium text-foreground/80 whitespace-nowrap animate-pulse">
-              {currentMessage.text}
-            </div>
-          </div>
+      <div className="bg-gradient-to-r from-secondary via-secondary to-secondary border-b border-border p-2 overflow-hidden">
+        <div className="flex items-center gap-2 animate-scroll-ticker">
+          <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
+          <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
+          <span className="mx-4 text-foreground/30">•</span>
+          <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
+          <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
         </div>
       </div>
 
-      {/* Address Bar */}
-      <div className="border-b border-border px-4 py-2 bg-secondary">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-foreground/60">📍</span>
-          <span className="text-foreground">{currentPath.join(' > ')}</span>
-        </div>
-      </div>
-
-      {/* File List */}
+      {/* File Tree */}
       <div className="flex-1 overflow-y-auto">
-        {renderFileTree(fileStructure)}
+        {fileStructure.map((item) => (
+          <FileTreeItem
+            key={item.id}
+            item={item}
+            onUpload={handleUpload}
+            onDelete={handleDelete}
+          />
+        ))}
       </div>
 
-      {/* Hidden File Input */}
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
         multiple
-        onChange={(e) => uploadingTo && handleFileUpload(e, uploadingTo)}
+        onChange={handleFileSelect}
         className="hidden"
-        accept="image/*,audio/*,video/*,.pdf,.txt,.zip,.rar"
+        accept="*/*"
       />
-
-      {/* Status Bar */}
-      <div className="border-t border-border px-4 py-2 bg-secondary text-xs text-foreground/60 flex justify-between">
-        <span>Ready</span>
-        {uploadingTo && <span className="text-accent">Uploading...</span>}
-      </div>
     </div>
   );
 }
