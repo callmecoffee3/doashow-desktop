@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Folder, File, Image, Music, FileText, Archive, AlertCircle, CheckCircle, Info, Upload, Download, Trash2 } from 'lucide-react';
+import { ChevronRight, Folder, File, Image, Music, FileText, Archive, AlertCircle, CheckCircle, Info, Upload, Download, Trash2, Edit2, Save, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FileItem {
@@ -14,12 +14,29 @@ interface FileItem {
   orange?: boolean;
 }
 
+interface TickerMessage {
+  text: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
 interface FileExplorerProps {
   onFileSelect?: (file: FileItem) => void;
 }
 
 const DB_NAME = 'DoaShowDB';
 const STORE_NAME = 'files';
+
+const DEFAULT_TICKER_MESSAGES: TickerMessage[] = [
+  { text: '💾 Storage: 256 GB available', icon: Info, color: 'text-blue-400' },
+  { text: '✅ System Status: All systems operational', icon: CheckCircle, color: 'text-green-400' },
+  { text: '📁 Total Files: 1,247 items', icon: Info, color: 'text-blue-400' },
+  { text: '⚠️ Backup: Last backup 2 hours ago', icon: AlertCircle, color: 'text-orange-400' },
+  { text: '🔄 Sync: Cloud sync enabled', icon: CheckCircle, color: 'text-green-400' },
+  { text: '📊 Usage: 156 GB of 256 GB used', icon: Info, color: 'text-blue-400' },
+  { text: '🛡️ Security: All files encrypted', icon: CheckCircle, color: 'text-green-400' },
+  { text: '⏱️ Last updated: Just now', icon: Info, color: 'text-blue-400' },
+];
 
 // Sample file structure with hierarchical organization
 const sampleFileStructure: FileItem[] = [
@@ -278,18 +295,19 @@ export default function FileExplorer() {
   const [fileStructure, setFileStructure] = useState<FileItem[]>(sampleFileStructure);
   const [uploadingFolderId, setUploadingFolderId] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  const tickerMessages = [
-    { text: '💾 Storage: 256 GB available', icon: Info, color: 'text-blue-400' },
-    { text: '✅ System Status: All systems operational', icon: CheckCircle, color: 'text-green-400' },
-    { text: '📁 Total Files: 1,247 items', icon: Info, color: 'text-blue-400' },
-    { text: '⚠️ Backup: Last backup 2 hours ago', icon: AlertCircle, color: 'text-orange-400' },
-    { text: '🔄 Sync: Cloud sync enabled', icon: CheckCircle, color: 'text-green-400' },
-    { text: '📊 Usage: 156 GB of 256 GB used', icon: Info, color: 'text-blue-400' },
-    { text: '🛡️ Security: All files encrypted', icon: CheckCircle, color: 'text-green-400' },
-    { text: '⏱️ Last updated: Just now', icon: Info, color: 'text-blue-400' },
-  ];
-
+  const [showTickerEditor, setShowTickerEditor] = useState(false);
+  const [tickerMessages, setTickerMessages] = useState<TickerMessage[]>(() => {
+    const saved = localStorage.getItem('doashow_ticker_messages');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_TICKER_MESSAGES;
+      }
+    }
+    return DEFAULT_TICKER_MESSAGES;
+  });
+  const [editingMessages, setEditingMessages] = useState<string[]>(tickerMessages.map(m => m.text));
   const [currentMessageIndex, setCurrentMessageIndex] = React.useState(0);
 
   React.useEffect(() => {
@@ -298,6 +316,31 @@ export default function FileExplorer() {
     }, 5000);
     return () => clearInterval(interval);
   }, [tickerMessages.length]);
+
+  const saveTickerMessages = () => {
+    const updated = editingMessages.map((text, index) => ({
+      ...tickerMessages[index],
+      text,
+    }));
+    setTickerMessages(updated);
+    localStorage.setItem('doashow_ticker_messages', JSON.stringify(updated));
+    setShowTickerEditor(false);
+  };
+
+  const addTickerMessage = () => {
+    setEditingMessages([...editingMessages, 'New message']);
+  };
+
+  const removeTickerMessage = (index: number) => {
+    setEditingMessages(editingMessages.filter((_, i) => i !== index));
+  };
+
+  const resetTickerMessages = () => {
+    setTickerMessages(DEFAULT_TICKER_MESSAGES);
+    setEditingMessages(DEFAULT_TICKER_MESSAGES.map(m => m.text));
+    localStorage.setItem('doashow_ticker_messages', JSON.stringify(DEFAULT_TICKER_MESSAGES));
+    setShowTickerEditor(false);
+  };
 
   const handleUpload = (parentId: string) => {
     setUploadingFolderId(parentId);
@@ -354,15 +397,83 @@ export default function FileExplorer() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Scrolling Ticker */}
-      <div className="bg-gradient-to-r from-secondary via-secondary to-secondary border-b border-border p-2 overflow-hidden">
-        <div className="flex items-center gap-2 animate-scroll-ticker">
-          <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
-          <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
-          <span className="mx-4 text-foreground/30">•</span>
-          <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
-          <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
+      <div className="bg-gradient-to-r from-secondary via-secondary to-secondary border-b border-border p-2 flex items-center justify-between group">
+        <div className="flex-1 overflow-hidden">
+          <div className="flex items-center gap-2 animate-scroll-ticker">
+            <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
+            <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
+            <span className="mx-4 text-foreground/30">•</span>
+            <MessageIcon className={`w-4 h-4 flex-shrink-0 ${currentMessage.color}`} />
+            <span className="text-xs text-foreground/70 whitespace-nowrap">{currentMessage.text}</span>
+          </div>
         </div>
+        <Button
+          onClick={() => {
+            setShowTickerEditor(true);
+            setEditingMessages(tickerMessages.map(m => m.text));
+          }}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          title="Edit ticker messages"
+        >
+          <Edit2 className="w-3 h-3" />
+        </Button>
       </div>
+
+      {/* Ticker Editor Modal */}
+      {showTickerEditor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4">Edit Ticker Messages</h3>
+            <div className="space-y-2 mb-4">
+              {editingMessages.map((msg, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={msg}
+                    onChange={(e) => {
+                      const updated = [...editingMessages];
+                      updated[index] = e.target.value;
+                      setEditingMessages(updated);
+                    }}
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded text-sm"
+                    placeholder="Enter message..."
+                  />
+                  <Button
+                    onClick={() => removeTickerMessage(index)}
+                    variant="destructive"
+                    size="icon"
+                    className="h-9 w-9"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 mb-4">
+              <Button onClick={addTickerMessage} variant="outline" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Message
+              </Button>
+            </div>
+            <div className="flex gap-2 justify-between">
+              <Button onClick={resetTickerMessages} variant="outline">
+                Reset to Default
+              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowTickerEditor(false)} variant="outline">
+                  Cancel
+                </Button>
+                <Button onClick={saveTickerMessages} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  Save Messages
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* File Tree */}
       <div className="flex-1 overflow-y-auto">
