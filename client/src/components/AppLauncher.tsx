@@ -25,6 +25,7 @@ import ConstructionApp from '@/components/ConstructionApp';
 import DashboardApp from '@/components/DashboardApp';
 import WebsitesApp from '@/components/WebsitesApp';
 import TodoApp from '@/components/TodoApp';
+import SocialApp from '@/components/SocialApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -240,6 +241,13 @@ export default function AppLauncher() {
       icon: '✓',
       description: 'Manage tasks and stay organized',
       component: <TodoApp />,
+    },
+    {
+      id: 'social',
+      name: 'SocialHub',
+      icon: '👥',
+      description: 'Connect with friends and share posts',
+      component: <SocialApp />,
     }
   ];
 
