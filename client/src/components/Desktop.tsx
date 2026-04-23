@@ -179,12 +179,12 @@ export default function Desktop() {
       <div
         ref={taskbarRef}
         onMouseDown={handleTaskbarMouseDown}
-        className="fixed bg-secondary border border-border px-4 py-2 flex items-center justify-between h-14 shadow-2xl rounded-lg cursor-grab active:cursor-grabbing z-40 backdrop-blur-sm bg-opacity-95 hover:bg-opacity-100 transition-all"
+        className="fixed bg-gradient-to-r from-accent/30 to-accent/20 border-2 border-accent/50 px-6 py-3 flex items-center justify-between h-16 shadow-2xl rounded-xl cursor-grab active:cursor-grabbing z-40 backdrop-blur-md bg-opacity-98 hover:bg-opacity-100 hover:border-accent transition-all gap-4"
         style={{
           left: `${taskbarPos.x}px`,
           top: `${taskbarPos.y}px`,
           width: 'auto',
-          minWidth: '600px',
+          minWidth: '700px',
         }}
       >
         {/* Start Menu */}
