@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Grid, List, Search, X } from 'lucide-react';
+import { Grid, List, Search, X, Pin } from 'lucide-react';
 import Slideshow from '@/components/Slideshow';
 import FileExplorer from '@/components/FileExplorer';
 import SettingsPanel from '@/components/SettingsPanel';
@@ -46,6 +46,18 @@ export default function AppLauncher() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPreview, setSelectedPreview] = useState<App | null>(null);
+  const [pinnedApps, setPinnedApps] = useState<string[]>(() => {
+    const saved = localStorage.getItem('doashow_pinned_apps');
+    return saved ? JSON.parse(saved) : ['slideshow', 'notes', 'calculator'];
+  });
+
+  const togglePinApp = (appId: string) => {
+    setPinnedApps(prev => {
+      const updated = prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId];
+      localStorage.setItem('doashow_pinned_apps', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const handleViewModeChange = (mode: 'grid' | 'list') => {
     setViewMode(mode);
@@ -445,6 +457,13 @@ export default function AppLauncher() {
               className="w-full"
             >
               📌 Pin to Desktop
+            </Button>
+            <Button
+              onClick={() => togglePinApp(selectedPreview.id)}
+              variant={pinnedApps.includes(selectedPreview.id) ? 'default' : 'outline'}
+              className="w-full"
+            >
+              {pinnedApps.includes(selectedPreview.id) ? '📍 Pinned to Taskbar' : '📍 Pin to Taskbar'}
             </Button>
           </div>
         )}

@@ -38,6 +38,25 @@ export default function Desktop() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [pinnedApps, setPinnedApps] = useState<string[]>(() => {
+    const saved = localStorage.getItem('doashow_pinned_apps');
+    return saved ? JSON.parse(saved) : ['slideshow', 'notes', 'calculator'];
+  });
+
+  // Save pinned apps to localStorage
+  useEffect(() => {
+    localStorage.setItem('doashow_pinned_apps', JSON.stringify(pinnedApps));
+  }, [pinnedApps]);
+
+  const togglePinApp = (appId: string) => {
+    setPinnedApps(prev =>
+      prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId]
+    );
+  };
+
+  const getPinnedAppObjects = () => {
+    return ALL_APPS.filter(app => pinnedApps.includes(app.id));
+  };
 
   // Update time every second
   useEffect(() => {
@@ -57,6 +76,10 @@ export default function Desktop() {
   const filteredApps = ALL_APPS.filter(app =>
     app.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleLaunchPinnedApp = (app: typeof ALL_APPS[0]) => {
+    openWindow({ id: app.id, title: app.name, icon: app.icon, component: null });
+  };
 
   return (
     <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden flex flex-col">
@@ -180,6 +203,26 @@ export default function Desktop() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Pinned Apps */}
+        <div className="flex gap-1">
+          {getPinnedAppObjects().map(app => (
+            <Button
+              key={app.id}
+              onClick={() => handleLaunchPinnedApp(app)}
+              size="icon"
+              variant="ghost"
+              className="rounded-lg hover:bg-accent/20 text-lg h-10 w-10 group relative"
+              title={app.name}
+            >
+              {app.icon}
+              {/* Pin/Unpin tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-background border border-border rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                {app.name}
+              </div>
+            </Button>
+          ))}
         </div>
 
         {/* Open Windows */}
