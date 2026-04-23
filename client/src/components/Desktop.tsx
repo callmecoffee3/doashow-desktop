@@ -120,16 +120,16 @@ export default function Desktop() {
           onClick={() => setShowStartMenu(!showStartMenu)}
           variant={showStartMenu ? 'default' : 'ghost'}
           size="icon"
-          className="rounded-lg bg-accent/20 hover:bg-accent/30"
+          className="rounded-lg bg-accent/20 hover:bg-accent/30 text-lg"
           title="Start Menu"
         >
-          <Grid3x3 className="w-5 h-5" />
+          ⊞
         </Button>
 
         {/* Center: Global Search Bar */}
         <div className="flex-1 max-w-md mx-4 relative">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">🔍</span>
             <input
               type="text"
               placeholder="Search apps..."
@@ -154,9 +154,9 @@ export default function Desktop() {
                   setSearchQuery('');
                   setShowSearchResults(false);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground text-lg"
               >
-                <X className="w-3 h-3" />
+                ✕
               </button>
             )}
 
@@ -199,7 +199,7 @@ export default function Desktop() {
 
         {/* Right: System Tray */}
         <div className="flex items-center gap-3 text-sm text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
-          <Clock className="w-4 h-4" />
+          <span className="text-lg">🕐</span>
           <span className="font-mono">
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
