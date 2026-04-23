@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWindow } from '@/contexts/WindowContext';
 import DraggableWindow from '@/components/DraggableWindow';
 import AppLauncher from '@/components/AppLauncher';
@@ -42,11 +42,57 @@ export default function Desktop() {
     const saved = localStorage.getItem('doashow_pinned_apps');
     return saved ? JSON.parse(saved) : ['slideshow', 'notes', 'calculator'];
   });
+  const [taskbarPos, setTaskbarPos] = useState<{ x: number; y: number }>(() => {
+    const saved = localStorage.getItem('doashow_taskbar_pos');
+    return saved ? JSON.parse(saved) : { x: 20, y: window.innerHeight - 80 };
+  });
+  const [isDraggingTaskbar, setIsDraggingTaskbar] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const taskbarRef = useRef<HTMLDivElement>(null);
 
   // Save pinned apps to localStorage
   useEffect(() => {
     localStorage.setItem('doashow_pinned_apps', JSON.stringify(pinnedApps));
   }, [pinnedApps]);
+
+  // Save taskbar position to localStorage
+  useEffect(() => {
+    localStorage.setItem('doashow_taskbar_pos', JSON.stringify(taskbarPos));
+  }, [taskbarPos]);
+
+  const handleTaskbarMouseDown = (e: React.MouseEvent) => {
+    if (taskbarRef.current) {
+      const rect = taskbarRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      setIsDraggingTaskbar(true);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDraggingTaskbar) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setTaskbarPos({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingTaskbar(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingTaskbar, dragOffset]);
 
   const togglePinApp = (appId: string) => {
     setPinnedApps(prev =>
@@ -82,7 +128,7 @@ export default function Desktop() {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden flex flex-col">
+    <div className="w-full h-screen bg-gradient-to-br from-background via-card to-background overflow-hidden">
       {/* DoaShow Header */}
       <div className="bg-gradient-to-r from-accent/20 to-accent/10 border-b border-accent/30 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -129,8 +175,18 @@ export default function Desktop() {
         ))}
       </div>
 
-      {/* Taskbar */}
-      <div className="bg-secondary border-t border-border px-4 py-2 flex items-center justify-between h-14 shadow-lg relative">
+      {/* Floating Taskbar */}
+      <div
+        ref={taskbarRef}
+        onMouseDown={handleTaskbarMouseDown}
+        className="fixed bg-secondary border border-border px-4 py-2 flex items-center justify-between h-14 shadow-2xl rounded-lg cursor-grab active:cursor-grabbing z-40 backdrop-blur-sm bg-opacity-95 hover:bg-opacity-100 transition-all"
+        style={{
+          left: `${taskbarPos.x}px`,
+          top: `${taskbarPos.y}px`,
+          width: 'auto',
+          minWidth: '600px',
+        }}
+      >
         {/* Start Menu */}
         <StartMenu
           isOpen={showStartMenu}
@@ -251,3 +307,5 @@ export default function Desktop() {
     </div>
   );
 }
+
+Desktop.defaultProps = {};
