@@ -26,6 +26,7 @@ import DashboardApp from '@/components/DashboardApp';
 import WebsitesApp from '@/components/WebsitesApp';
 import TodoApp from '@/components/TodoApp';
 import SocialApp from '@/components/SocialApp';
+import ComprehensiveAppStore from '@/components/ComprehensiveAppStore';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -260,6 +261,13 @@ export default function AppLauncher() {
       icon: '👥',
       description: 'Connect with friends and share posts',
       component: <SocialApp />,
+    },
+    {
+      id: 'appstore-comprehensive',
+      name: 'App Store Pro',
+      icon: '🏬',
+      description: 'Browse all available apps and features',
+      component: <ComprehensiveAppStore />,
     }
   ];
 
@@ -300,7 +308,8 @@ export default function AppLauncher() {
       pages: 700,
       videos: 800,
       photos: 800,
-      appstore: 900,
+      appstore: 800,
+      'appstore-comprehensive': 1200,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
