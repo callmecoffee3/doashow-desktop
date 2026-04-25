@@ -27,6 +27,11 @@ import WebsitesApp from '@/components/WebsitesApp';
 import TodoApp from '@/components/TodoApp';
 import SocialApp from '@/components/SocialApp';
 import ComprehensiveAppStore from '@/components/ComprehensiveAppStore';
+import FacebookApp from '@/components/FacebookApp';
+import InstagramApp from '@/components/InstagramApp';
+import XcomApp from '@/components/XcomApp';
+import YouTubeApp from '@/components/YouTubeApp';
+import TikTokApp from '@/components/TikTokApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -268,6 +273,41 @@ export default function AppLauncher() {
       icon: '🏬',
       description: 'Browse all available apps and features',
       component: <ComprehensiveAppStore />,
+    },
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      icon: '👥',
+      description: 'Connect with friends and share updates',
+      component: <FacebookApp />,
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      icon: '📷',
+      description: 'Share photos and stories',
+      component: <InstagramApp />,
+    },
+    {
+      id: 'xcom',
+      name: 'X',
+      icon: '𝕏',
+      description: 'Share thoughts and ideas',
+      component: <XcomApp />,
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      icon: '▶️',
+      description: 'Watch and share videos',
+      component: <YouTubeApp />,
+    },
+    {
+      id: 'tiktok',
+      name: 'TikTok',
+      icon: '♪',
+      description: 'Create and watch short videos',
+      component: <TikTokApp />,
     }
   ];
 
@@ -310,6 +350,11 @@ export default function AppLauncher() {
       photos: 800,
       appstore: 800,
       'appstore-comprehensive': 1200,
+      facebook: 1000,
+      instagram: 900,
+      xcom: 1000,
+      youtube: 1200,
+      tiktok: 800,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
