@@ -35,6 +35,7 @@ import TikTokApp from '@/components/TikTokApp';
 import TerminalApp from '@/components/TerminalApp';
 import MarketplaceApp from '@/components/MarketplaceApp';
 import BankApp from '@/components/BankApp';
+import DownloadsApp from '@/components/DownloadsApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -332,6 +333,13 @@ export default function AppLauncher() {
       icon: '🏦',
       description: 'Manage your finances',
       component: <BankApp />,
+    },
+    {
+      id: 'downloads',
+      name: 'Downloads',
+      icon: '📥',
+      description: 'Manage downloaded files',
+      component: <DownloadsApp />,
     }
   ];
 
@@ -382,6 +390,7 @@ export default function AppLauncher() {
       terminal: 1000,
       marketplace: 1200,
       bank: 1000,
+      downloads: 1100,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
