@@ -32,6 +32,9 @@ import InstagramApp from '@/components/InstagramApp';
 import XcomApp from '@/components/XcomApp';
 import YouTubeApp from '@/components/YouTubeApp';
 import TikTokApp from '@/components/TikTokApp';
+import TerminalApp from '@/components/TerminalApp';
+import MarketplaceApp from '@/components/MarketplaceApp';
+import BankApp from '@/components/BankApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -308,6 +311,27 @@ export default function AppLauncher() {
       icon: '♪',
       description: 'Create and watch short videos',
       component: <TikTokApp />,
+    },
+    {
+      id: 'terminal',
+      name: 'Terminal',
+      icon: '💻',
+      description: 'Command-line interface',
+      component: <TerminalApp />,
+    },
+    {
+      id: 'marketplace',
+      name: 'Marketplace',
+      icon: '🛍️',
+      description: 'Buy and sell items',
+      component: <MarketplaceApp />,
+    },
+    {
+      id: 'bank',
+      name: 'Bank',
+      icon: '🏦',
+      description: 'Manage your finances',
+      component: <BankApp />,
     }
   ];
 
@@ -355,6 +379,9 @@ export default function AppLauncher() {
       xcom: 1000,
       youtube: 1200,
       tiktok: 800,
+      terminal: 1000,
+      marketplace: 1200,
+      bank: 1000,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
