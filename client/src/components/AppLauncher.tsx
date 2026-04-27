@@ -36,6 +36,9 @@ import TerminalApp from '@/components/TerminalApp';
 import MarketplaceApp from '@/components/MarketplaceApp';
 import BankApp from '@/components/BankApp';
 import DownloadsApp from '@/components/DownloadsApp';
+import CalendarApp from '@/components/CalendarApp';
+import ScreenManagerApp from '@/components/ScreenManagerApp';
+import OrientationApp from '@/components/OrientationApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -340,6 +343,27 @@ export default function AppLauncher() {
       icon: '📥',
       description: 'Manage downloaded files',
       component: <DownloadsApp />,
+    },
+    {
+      id: 'calendar',
+      name: 'Calendar',
+      icon: '📅',
+      description: 'Manage dates and events',
+      component: <CalendarApp />,
+    },
+    {
+      id: 'screenmanager',
+      name: 'Screen Manager',
+      icon: '🖥️',
+      description: 'Display and screen settings',
+      component: <ScreenManagerApp />,
+    },
+    {
+      id: 'orientation',
+      name: 'Orientation',
+      icon: '🔄',
+      description: 'Screen orientation control',
+      component: <OrientationApp />,
     }
   ];
 
@@ -391,6 +415,9 @@ export default function AppLauncher() {
       marketplace: 1200,
       bank: 1000,
       downloads: 1100,
+      calendar: 1200,
+      screenmanager: 1400,
+      orientation: 1200,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
