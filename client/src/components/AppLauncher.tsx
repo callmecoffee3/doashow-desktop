@@ -39,6 +39,8 @@ import DownloadsApp from '@/components/DownloadsApp';
 import CalendarApp from '@/components/CalendarApp';
 import ScreenManagerApp from '@/components/ScreenManagerApp';
 import OrientationApp from '@/components/OrientationApp';
+import UsersApp from '@/components/UsersApp';
+import MemoryApp from '@/components/MemoryApp';
 import { useWindow } from '@/contexts/WindowContext';
 import { useDesktopShortcuts } from '@/contexts/DesktopShortcutsContext';
 
@@ -364,6 +366,20 @@ export default function AppLauncher() {
       icon: '🔄',
       description: 'Screen orientation control',
       component: <OrientationApp />,
+    },
+    {
+      id: 'users',
+      name: 'Users',
+      icon: '👥',
+      description: 'Manage user accounts and profiles',
+      component: <UsersApp />,
+    },
+    {
+      id: 'memory',
+      name: 'Memory',
+      icon: '💾',
+      description: 'System memory and storage management',
+      component: <MemoryApp />,
     }
   ];
 
@@ -418,6 +434,8 @@ export default function AppLauncher() {
       calendar: 1200,
       screenmanager: 1400,
       orientation: 1200,
+      users: 1400,
+      memory: 1400,
       podcast: 800,
       videoaudiorecorder: 900,
       mintmobile: 900,
